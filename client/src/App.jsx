@@ -7,7 +7,6 @@ import { MODELS } from './constants/models.js';
 import { streamChat } from './services/chatStream.js';
 import AuthModal from './components/AuthModal.jsx';
 import { checkAndHandleYandexToken } from './services/yandexAuth.js';
-import { checkAndHandleVKToken } from './services/vkAuth.js';
 import {
   Code, Eye, Sparkles, ArrowRight,
   Cpu, FileText, Image as ImgIcon, Zap, CheckCircle2
@@ -80,20 +79,25 @@ export default function App() {
     } catch {}
   };
 
-  // Check for real Yandex ID / VK ID OAuth callback on mount
+  // Check for Yandex OAuth callback on mount + 24h session expiry
   useEffect(() => {
     async function checkAuth() {
-      // 1. Check Yandex callback
+      // Check 24h session expiry
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_USER));
+        if (saved && saved.signedAt) {
+          const elapsed = Date.now() - new Date(saved.signedAt).getTime();
+          if (elapsed > 24 * 60 * 60 * 1000) {
+            handleLogout();
+            return;
+          }
+        }
+      } catch {}
+
+      // Check Yandex OAuth callback
       const yandexUser = await checkAndHandleYandexToken();
       if (yandexUser) {
         handleLogin(yandexUser);
-        return;
-      }
-
-      // 2. Check VK callback
-      const vkUser = await checkAndHandleVKToken();
-      if (vkUser) {
-        handleLogin(vkUser);
         return;
       }
     }
@@ -409,7 +413,7 @@ export default function App() {
         />
       </div>
 
-      {/* VK ID & Yandex ID Authentication Modal */}
+      {/* Yandex ID Authentication Modal */}
       <AuthModal
         isOpen={authModalOpen || !user}
         onLogin={handleLogin}

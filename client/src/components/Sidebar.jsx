@@ -146,23 +146,13 @@ export default function Sidebar({
             <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200 shadow-2xs">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="relative">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-2xs ${
-                    user.provider === 'vk' 
-                      ? 'bg-gradient-to-br from-blue-600 to-indigo-600' 
-                      : 'bg-gradient-to-br from-red-500 to-orange-500'
-                  }`}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-2xs bg-gradient-to-br from-red-500 to-orange-500">
                     {user.avatarLetter || user.name?.[0]?.toUpperCase() || 'U'}
                   </div>
-                  {/* Badge: VK or Yandex */}
-                  {user.provider === 'vk' ? (
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#0077ff] text-white flex items-center justify-center font-bold text-[7px] border border-white">
-                      VK
-                    </div>
-                  ) : (
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#fc3f1d] text-white flex items-center justify-center font-bold text-[8px] border border-white">
-                      Я
-                    </div>
-                  )}
+                  {/* Yandex badge */}
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#fc3f1d] text-white flex items-center justify-center font-bold text-[8px] border border-white">
+                    Я
+                  </div>
                 </div>
 
                 <div className="truncate text-left">
@@ -170,7 +160,7 @@ export default function Sidebar({
                     {user.name}
                   </div>
                   <div className="text-[10px] text-slate-400 truncate">
-                    {user.email || (user.provider === 'vk' ? 'VK ID' : 'Яндекс ID')}
+                    {user.email || 'Яндекс ID'}
                   </div>
                 </div>
               </div>
@@ -191,15 +181,10 @@ export default function Sidebar({
               onClick={onOpenLogin}
               className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
             >
-              <div className="flex items-center -space-x-1">
-                <div className="w-4 h-4 rounded-full bg-[#0077ff] text-white flex items-center justify-center font-bold text-[8px] border border-slate-900">
-                  VK
-                </div>
-                <div className="w-4 h-4 rounded-full bg-[#fc3f1d] text-white flex items-center justify-center font-bold text-[9px] border border-slate-900">
-                  Я
-                </div>
+              <div className="w-4 h-4 rounded-full bg-[#fc3f1d] text-white flex items-center justify-center font-bold text-[9px]">
+                Я
               </div>
-              <span>Войти (VK / Яндекс)</span>
+              <span>Войти через Яндекс</span>
             </button>
           )}
         </div>
