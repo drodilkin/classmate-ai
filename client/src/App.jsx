@@ -6,6 +6,7 @@ import ChatInput from './components/ChatInput.jsx';
 import { MODELS } from './constants/models.js';
 import { streamChat } from './services/chatStream.js';
 import AuthModal from './components/AuthModal.jsx';
+import { checkAndHandleYandexToken } from './services/yandexAuth.js';
 import {
   Code, Eye, Sparkles, ArrowRight,
   Cpu, FileText, Image as ImgIcon, Zap, CheckCircle2
@@ -77,6 +78,17 @@ export default function App() {
       localStorage.removeItem(STORAGE_USER);
     } catch {}
   };
+
+  // Check for real Yandex ID OAuth callback on mount
+  useEffect(() => {
+    async function checkAuth() {
+      const yandexUser = await checkAndHandleYandexToken();
+      if (yandexUser) {
+        handleLogin(yandexUser);
+      }
+    }
+    checkAuth();
+  }, []);
 
   const abortRef = useRef(null);
   const bottomRef = useRef(null);

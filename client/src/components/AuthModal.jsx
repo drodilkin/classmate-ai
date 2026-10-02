@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Check, ArrowRight, Lock, Phone, Mail, RefreshCw, KeyRound } from 'lucide-react';
+import { ShieldCheck, Check, ArrowRight, KeyRound, RefreshCw } from 'lucide-react';
+import { getYandexAuthUrl } from '../services/yandexAuth.js';
 
 export default function AuthModal({ isOpen, onLogin }) {
-  const [provider, setProvider] = useState(null); // 'vk' | 'yandex' | null
-  const [step, setStep] = useState('input'); // 'input' | 'verify'
+  const [provider, setProvider] = useState(null); // 'vk' | null
+  const [step, setStep] = useState('input');
   const [loginValue, setLoginValue] = useState('');
   const [verifyCode, setVerifyCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -11,21 +12,26 @@ export default function AuthModal({ isOpen, onLogin }) {
 
   if (!isOpen) return null;
 
-  // Handle Initial Provider Selection
-  const handleSelectProvider = (p) => {
-    setProvider(p);
+  // Real Yandex ID OAuth Redirect
+  const handleYandexOAuth = () => {
+    setLoading(true);
+    window.location.href = getYandexAuthUrl();
+  };
+
+  // VK ID flow
+  const handleSelectVK = () => {
+    setProvider('vk');
     setStep('input');
     setLoginValue('');
     setVerifyCode('');
     setError('');
   };
 
-  // Step 1: Submit Phone or Login
   const handleSendCode = (e) => {
     if (e) e.preventDefault();
     const val = loginValue.trim();
     if (!val) {
-      setError(provider === 'vk' ? 'Укажи номер телефона или VK ID' : 'Укажи логин, email или телефон Яндекс');
+      setError('Укажи номер телефона или адрес VK');
       return;
     }
     setError('');
@@ -34,11 +40,10 @@ export default function AuthModal({ isOpen, onLogin }) {
     setTimeout(() => {
       setLoading(false);
       setStep('verify');
-    }, 700);
+    }, 600);
   };
 
-  // Step 2: Verify Code and Log In
-  const handleVerify = (e) => {
+  const handleVerifyVK = (e) => {
     if (e) e.preventDefault();
     if (!verifyCode.trim()) {
       setError('Введи код подтверждения');
@@ -48,23 +53,20 @@ export default function AuthModal({ isOpen, onLogin }) {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      const isYandex = provider === 'yandex';
-      const cleanName = loginValue.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '') || (isYandex ? 'Яндекс Пользователь' : 'VK Пользователь');
+      const cleanName = loginValue.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '') || 'VK Пользователь';
 
       const user = {
         name: cleanName,
         identifier: loginValue.trim(),
-        provider: isYandex ? 'yandex' : 'vk',
-        email: isYandex 
-          ? (loginValue.includes('@') ? loginValue : `${cleanName.toLowerCase()}@yandex.ru`)
-          : (loginValue.startsWith('+') ? loginValue : `${cleanName}@vk.com`),
-        avatarLetter: cleanName[0]?.toUpperCase() || (isYandex ? 'Я' : 'V'),
-        token: `auth_${provider}_` + Date.now(),
+        provider: 'vk',
+        email: loginValue.startsWith('+') ? loginValue : `${cleanName}@vk.com`,
+        avatarLetter: cleanName[0]?.toUpperCase() || 'V',
+        token: 'auth_vk_' + Date.now(),
         signedAt: new Date().toISOString()
       };
 
       onLogin(user);
-    }, 800);
+    }, 600);
   };
 
   return (
@@ -84,11 +86,11 @@ export default function AuthModal({ isOpen, onLogin }) {
             Вход в <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">ClassMate AI</span>
           </h2>
           <p className="text-xs text-slate-500 max-w-xs mx-auto">
-            Для защиты сервиса от спама и сохранения твоих решений вход обязателен через VK ID или Яндекс ID.
+            Для сохранения твоих решений домашки и доступа к нейросетям войди через Яндекс ID или VK ID.
           </p>
         </div>
 
-        {/* Dynamic Form Area */}
+        {/* Dynamic Area */}
         {!provider ? (
           /* Step 0: Choose Provider */
           <div className="space-y-3">
@@ -96,10 +98,31 @@ export default function AuthModal({ isOpen, onLogin }) {
               Выбери способ входа
             </div>
 
+            {/* REAL YANDEX ID OAUTH BUTTON */}
+            <button
+              type="button"
+              onClick={handleYandexOAuth}
+              disabled={loading}
+              className="w-full py-4 px-5 rounded-2xl bg-black hover:bg-slate-900 text-white font-semibold text-sm shadow-md hover:shadow-xl transition-all flex items-center justify-center gap-3 cursor-pointer group active:scale-98"
+            >
+              {loading ? (
+                <RefreshCw className="w-5 h-5 animate-spin text-white" />
+              ) : (
+                <>
+                  {/* Official Red Circle "Я" */}
+                  <div className="w-6 h-6 rounded-full bg-[#fc3f1d] text-white flex items-center justify-center font-bold text-xs shrink-0 group-hover:scale-110 transition-transform shadow-xs">
+                    Я
+                  </div>
+                  <span className="tracking-wide">Войти с Яндекс ID (Официально)</span>
+                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                </>
+              )}
+            </button>
+
             {/* VK ID Button */}
             <button
               type="button"
-              onClick={() => handleSelectProvider('vk')}
+              onClick={handleSelectVK}
               className="w-full py-3.5 px-4 rounded-2xl bg-[#0077ff] hover:bg-[#0066dd] text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-3 cursor-pointer group active:scale-98"
             >
               {/* VK Official Logo */}
@@ -109,42 +132,24 @@ export default function AuthModal({ isOpen, onLogin }) {
               <span>Войти с VK ID</span>
             </button>
 
-            {/* Yandex ID Button */}
-            <button
-              type="button"
-              onClick={() => handleSelectProvider('yandex')}
-              className="w-full py-3.5 px-4 rounded-2xl bg-black hover:bg-slate-900 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-3 cursor-pointer group active:scale-98"
-            >
-              {/* Yandex Official Logo "Я" */}
-              <div className="w-5 h-5 rounded-full bg-[#fc3f1d] text-white flex items-center justify-center font-bold text-xs shrink-0 group-hover:scale-105 transition-transform">
-                Я
+            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-[11px] text-slate-500 space-y-1">
+              <div className="flex items-center gap-1.5 font-semibold text-slate-700">
+                <Check className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Официальный Яндекс OAuth подключен</span>
               </div>
-              <span>Войти с Яндекс ID</span>
-            </button>
-
-            <div className="pt-2 text-center text-[11px] text-slate-400">
-              🔒 Доступ к сайту откроется сразу после авторизации
+              <div>Кнопка Яндекс ID открывает настоящую страницу входа Яндекса.</div>
             </div>
           </div>
         ) : step === 'input' ? (
-          /* Step 1: Input Phone / Account */
+          /* VK Step 1 */
           <form onSubmit={handleSendCode} className="space-y-4 animate-msg-in">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <div className="flex items-center gap-2">
-                {provider === 'vk' ? (
-                  <div className="w-6 h-6 rounded-lg bg-[#0077ff] text-white flex items-center justify-center text-xs font-bold">
-                    VK
-                  </div>
-                ) : (
-                  <div className="w-6 h-6 rounded-full bg-[#fc3f1d] text-white flex items-center justify-center text-xs font-bold">
-                    Я
-                  </div>
-                )}
-                <span className="text-sm font-semibold text-slate-800">
-                  {provider === 'vk' ? 'Вход через VK ID' : 'Вход через Яндекс ID'}
-                </span>
+                <div className="w-6 h-6 rounded-lg bg-[#0077ff] text-white flex items-center justify-center text-xs font-bold">
+                  VK
+                </div>
+                <span className="text-sm font-semibold text-slate-800">Вход через VK ID</span>
               </div>
-
               <button
                 type="button"
                 onClick={() => setProvider(null)}
@@ -155,48 +160,33 @@ export default function AuthModal({ isOpen, onLogin }) {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-700">
-                {provider === 'vk' ? 'Телефон или адрес профиля VK:' : 'Телефон, почта или логин Яндекс:'}
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={loginValue}
-                  onChange={(e) => setLoginValue(e.target.value)}
-                  placeholder={provider === 'vk' ? '+7 999 000-00-00 или id123' : 'user@yandex.ru или +7 999...'}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none text-sm text-slate-900"
-                  autoFocus
-                />
-              </div>
+              <label className="text-xs font-medium text-slate-700">Телефон или адрес профиля VK:</label>
+              <input
+                type="text"
+                value={loginValue}
+                onChange={(e) => setLoginValue(e.target.value)}
+                placeholder="+7 999 000-00-00 или id123"
+                className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none text-sm text-slate-900"
+                autoFocus
+              />
               {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-3.5 px-4 rounded-xl text-white font-semibold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 ${
-                provider === 'vk' ? 'bg-[#0077ff] hover:bg-[#0066dd]' : 'bg-[#fc3f1d] hover:bg-[#e03314]'
-              }`}
+              className="w-full py-3.5 px-4 rounded-xl bg-[#0077ff] hover:bg-[#0066dd] text-white font-semibold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
             >
-              {loading ? (
-                <RefreshCw className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  <span>Продолжить</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
+              {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <><span>Продолжить</span><ArrowRight className="w-4 h-4" /></>}
             </button>
           </form>
         ) : (
-          /* Step 2: Verification Code */
-          <form onSubmit={handleVerify} className="space-y-4 animate-msg-in">
+          /* VK Step 2 */
+          <form onSubmit={handleVerifyVK} className="space-y-4 animate-msg-in">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <div className="flex items-center gap-2">
                 <KeyRound className="w-4 h-4 text-indigo-600" />
-                <span className="text-sm font-semibold text-slate-800">
-                  Подтверждение входа
-                </span>
+                <span className="text-sm font-semibold text-slate-800">Код подтверждения</span>
               </div>
               <button
                 type="button"
@@ -208,25 +198,20 @@ export default function AuthModal({ isOpen, onLogin }) {
             </div>
 
             <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1">
-              <div>Код подтверждения отправлен на:</div>
-              <div className="font-semibold text-slate-800">{loginValue}</div>
-              <div className="text-[11px] text-slate-400">
-                (Для входа подойдёт любой 4-значный код или пароль)
-              </div>
+              <div>Код отправлен на: <span className="font-semibold text-slate-800">{loginValue}</span></div>
+              <div className="text-[11px] text-slate-400">(Для проверки подойдёт любой 4-значный код)</div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-700">
-                Введи код или пароль:
-              </label>
+              <label className="text-xs font-medium text-slate-700">Введи код из SMS или приложения VK:</label>
               <input
                 type="text"
                 value={verifyCode}
                 onChange={(e) => setVerifyCode(e.target.value)}
-                placeholder="Например: 1234"
+                placeholder="1234"
                 className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none text-sm text-center font-bold tracking-widest text-slate-900"
                 autoFocus
-                maxLength={12}
+                maxLength={8}
               />
               {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
             </div>
@@ -236,19 +221,12 @@ export default function AuthModal({ isOpen, onLogin }) {
               disabled={loading}
               className="w-full py-3.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
             >
-              {loading ? (
-                <RefreshCw className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  <span>Войти в ClassMate AI</span>
-                  <Check className="w-4 h-4" />
-                </>
-              )}
+              {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <><span>Войти в ClassMate AI</span><Check className="w-4 h-4" /></>}
             </button>
           </form>
         )}
 
-        {/* Security badge footer */}
+        {/* Security footer */}
         <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 border-t border-slate-100 pt-3">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
           <span>Безопасная сквозная авторизация • РФ Без VPN</span>
