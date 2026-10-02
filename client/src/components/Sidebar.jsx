@@ -52,7 +52,10 @@ export default function Sidebar({
 
           {/* New Chat Button */}
           <button
-            onClick={onNewChat}
+            onClick={() => {
+              onNewChat();
+              if (window.innerWidth < 1024) setOpen(false);
+            }}
             className="mt-3 flex items-center justify-center gap-2 w-full py-2 px-3 bg-white border border-slate-200 hover:border-slate-300 text-slate-800 text-xs font-medium rounded-lg shadow-2xs hover:bg-slate-50 transition-all cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5 text-orange-500" />
@@ -84,7 +87,10 @@ export default function Sidebar({
                 return (
                   <div
                     key={chat.id}
-                    onClick={() => onSelectChat(chat.id)}
+                    onClick={() => {
+                      onSelectChat(chat.id);
+                      if (window.innerWidth < 1024) setOpen(false);
+                    }}
                     className={`
                       group relative flex items-center justify-between
                       px-2.5 py-2 rounded-md text-xs cursor-pointer transition-all

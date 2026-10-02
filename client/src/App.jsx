@@ -37,7 +37,9 @@ export default function App() {
 
   const [activeChatId, setActiveChatId] = useState(() => chats[0]?.id);
   const [streaming, setStreaming] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    return typeof window !== 'undefined' ? window.innerWidth >= 1024 : false;
+  });
 
   const abortRef = useRef(null);
   const bottomRef = useRef(null);
@@ -259,7 +261,7 @@ export default function App() {
         {/* Chat / Messages Area */}
         <div
           ref={scrollRef}
-          className="flex-1 overflow-y-auto overscroll-contain"
+          className="flex-1 overflow-y-auto overscroll-contain min-h-0 touch-pan-y"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
 
