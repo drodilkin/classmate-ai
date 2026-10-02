@@ -1,14 +1,13 @@
-import React from 'react';
 import {
   Home, Plus, MessageSquare, Trash2, Search,
   PanelLeftClose, ChevronDown, Layers, Zap,
-  Settings, CreditCard, Sparkles, Image as ImgIcon
+  Settings, CreditCard, Sparkles, Image as ImgIcon, LogOut
 } from 'lucide-react';
 
 export default function Sidebar({
   open, setOpen,
   chats, activeChatId, onSelectChat, onNewChat, onDeleteChat,
-  user
+  user, onLogout, onOpenLogin
 }) {
   return (
     <>
@@ -142,31 +141,67 @@ export default function Sidebar({
 
         {/* Bottom Profile / Workspace */}
         <div className="border-t border-slate-200 p-2.5 bg-slate-50 space-y-2">
-          {/* Upgrade pill */}
-          <div className="flex items-center justify-between px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs">
-            <div className="flex items-center gap-2">
-              <CreditCard className="w-3.5 h-3.5 text-orange-500" />
-              <span className="font-medium text-slate-800">Тариф Free</span>
-            </div>
-            <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-200">
-              Активен
-            </span>
-          </div>
+          {/* User Profile or Login */}
+          {user ? (
+            <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200 shadow-2xs">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="relative">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-2xs ${
+                    user.provider === 'vk' 
+                      ? 'bg-gradient-to-br from-blue-600 to-indigo-600' 
+                      : 'bg-gradient-to-br from-red-500 to-orange-500'
+                  }`}>
+                    {user.avatarLetter || user.name?.[0]?.toUpperCase() || 'U'}
+                  </div>
+                  {/* Badge: VK or Yandex */}
+                  {user.provider === 'vk' ? (
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#0077ff] text-white flex items-center justify-center font-bold text-[7px] border border-white">
+                      VK
+                    </div>
+                  ) : (
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#fc3f1d] text-white flex items-center justify-center font-bold text-[8px] border border-white">
+                      Я
+                    </div>
+                  )}
+                </div>
 
-          {/* User workspace */}
-          <div className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-200/50 transition-colors">
-            <div className="w-7 h-7 rounded-md bg-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs shrink-0">
-              {user?.name ? user.name[0].toUpperCase() : 'M'}
-            </div>
-            <div className="truncate text-left">
-              <div className="text-xs font-medium text-slate-800 truncate">
-                {user?.name || 'mlmimorgenstern8'}
+                <div className="truncate text-left">
+                  <div className="text-xs font-semibold text-slate-800 truncate">
+                    {user.name}
+                  </div>
+                  <div className="text-[10px] text-slate-400 truncate">
+                    {user.email || (user.provider === 'vk' ? 'VK ID' : 'Яндекс ID')}
+                  </div>
+                </div>
               </div>
-              <div className="text-[10px] text-slate-400 truncate">
-                Школьный профиль
-              </div>
+
+              {/* Logout button */}
+              <button
+                type="button"
+                onClick={onLogout}
+                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer shrink-0"
+                title="Выйти из аккаунта"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
             </div>
-          </div>
+          ) : (
+            <button
+              type="button"
+              onClick={onOpenLogin}
+              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
+            >
+              <div className="flex items-center -space-x-1">
+                <div className="w-4 h-4 rounded-full bg-[#0077ff] text-white flex items-center justify-center font-bold text-[8px] border border-slate-900">
+                  VK
+                </div>
+                <div className="w-4 h-4 rounded-full bg-[#fc3f1d] text-white flex items-center justify-center font-bold text-[9px] border border-slate-900">
+                  Я
+                </div>
+              </div>
+              <span>Войти (VK / Яндекс)</span>
+            </button>
+          )}
         </div>
       </aside>
     </>

@@ -4,6 +4,8 @@ import Sidebar from './components/Sidebar.jsx';
 import MessageItem from './components/MessageItem.jsx';
 import ChatInput from './components/ChatInput.jsx';
 import { MODELS } from './constants/models.js';
+import { streamChat } from './services/chatStream.js';
+import AuthModal from './components/AuthModal.jsx';
 import {
   Code, Eye, Sparkles, ArrowRight,
   Cpu, FileText, Image as ImgIcon, Zap, CheckCircle2
@@ -11,6 +13,7 @@ import {
 
 const STORAGE_CHATS = 'mistral_chats_v1';
 const STORAGE_MODEL = 'mistral_model_v1';
+const STORAGE_USER  = 'yandex_user_v1';
 
 function createChat(modelId) {
   return {
@@ -40,6 +43,38 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     return typeof window !== 'undefined' ? window.innerWidth >= 1024 : false;
   });
+
+  // Yandex ID User State
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_USER));
+      if (saved && saved.name) return saved;
+    } catch {}
+    return null;
+  });
+
+  // Open modal if user is not authenticated yet
+  const [authModalOpen, setAuthModalOpen] = useState(() => {
+    try {
+      return !localStorage.getItem(STORAGE_USER);
+    } catch {
+      return false;
+    }
+  });
+
+  const handleLogin = (newUser) => {
+    setUser(newUser);
+    try {
+      localStorage.setItem(STORAGE_USER, JSON.stringify(newUser));
+    } catch {}
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    try {
+      localStorage.removeItem(STORAGE_USER);
+    } catch {}
+  };
 
   const abortRef = useRef(null);
   const bottomRef = useRef(null);
@@ -151,59 +186,28 @@ export default function App() {
     abortRef.current = ctrl;
 
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: modelId,
-          messages: newMsgs.map(m => ({ role: m.role, content: m.content })),
-          images: images
-        }),
-        signal: ctrl.signal
-      });
-
-      if (!res.ok) {
-        throw new Error(`Ошибка сервера ${res.status}`);
-      }
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || trimmed === 'data: [DONE]') continue;
-          if (trimmed.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(trimmed.slice(6));
-              if (data.content) {
-                setChats(prev =>
-                  prev.map(c => {
-                    if (c.id !== activeChatId) return c;
-                    const msgs = [...c.messages];
-                    const last = msgs[msgs.length - 1];
-                    if (last && last.role === 'assistant') {
-                      msgs[msgs.length - 1] = {
-                        ...last,
-                        content: last.content + data.content
-                      };
-                    }
-                    return { ...c, messages: msgs };
-                  })
-                );
+      await streamChat({
+        modelId,
+        messages: newMsgs,
+        images,
+        signal: ctrl.signal,
+        onChunk: (chunk) => {
+          setChats(prev =>
+            prev.map(c => {
+              if (c.id !== activeChatId) return c;
+              const msgs = [...c.messages];
+              const last = msgs[msgs.length - 1];
+              if (last && last.role === 'assistant') {
+                msgs[msgs.length - 1] = {
+                  ...last,
+                  content: last.content + chunk
+                };
               }
-            } catch {}
-          }
+              return { ...c, messages: msgs };
+            })
+          );
         }
-      }
+      });
     } catch (err) {
       if (err.name !== 'AbortError') {
         setChats(prev =>
@@ -212,7 +216,7 @@ export default function App() {
             const msgs = [...c.messages];
             msgs[msgs.length - 1] = {
               role: 'assistant',
-              content: `⚠️ Не удалось связаться с сервером: ${err.message}`,
+              content: `⚠️ Ошибка: ${err.message}`,
               timestamp: new Date().toISOString()
             };
             return { ...c, messages: msgs };
@@ -244,6 +248,9 @@ export default function App() {
         onSelectChat={setActiveChatId}
         onNewChat={handleNewChat}
         onDeleteChat={handleDeleteChat}
+        user={user}
+        onLogout={handleLogout}
+        onOpenLogin={() => setAuthModalOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -377,6 +384,13 @@ export default function App() {
           streaming={streaming}
         />
       </div>
+
+      {/* VK ID & Yandex ID Authentication Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onLogin={handleLogin}
+      />
     </div>
   );
 }
