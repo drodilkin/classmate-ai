@@ -64,6 +64,7 @@ export default function App() {
 
   const handleLogin = (newUser) => {
     setUser(newUser);
+    setAuthModalOpen(false);
     try {
       localStorage.setItem(STORAGE_USER, JSON.stringify(newUser));
     } catch {}
@@ -71,6 +72,7 @@ export default function App() {
 
   const handleLogout = () => {
     setUser(null);
+    setAuthModalOpen(true);
     try {
       localStorage.removeItem(STORAGE_USER);
     } catch {}
@@ -387,8 +389,7 @@ export default function App() {
 
       {/* VK ID & Yandex ID Authentication Modal */}
       <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
+        isOpen={authModalOpen || !user}
         onLogin={handleLogin}
       />
     </div>
