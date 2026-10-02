@@ -7,6 +7,7 @@ import { MODELS } from './constants/models.js';
 import { streamChat } from './services/chatStream.js';
 import AuthModal from './components/AuthModal.jsx';
 import { checkAndHandleYandexToken } from './services/yandexAuth.js';
+import { checkAndHandleVKToken } from './services/vkAuth.js';
 import {
   Code, Eye, Sparkles, ArrowRight,
   Cpu, FileText, Image as ImgIcon, Zap, CheckCircle2
@@ -79,12 +80,21 @@ export default function App() {
     } catch {}
   };
 
-  // Check for real Yandex ID OAuth callback on mount
+  // Check for real Yandex ID / VK ID OAuth callback on mount
   useEffect(() => {
     async function checkAuth() {
+      // 1. Check Yandex callback
       const yandexUser = await checkAndHandleYandexToken();
       if (yandexUser) {
         handleLogin(yandexUser);
+        return;
+      }
+
+      // 2. Check VK callback
+      const vkUser = await checkAndHandleVKToken();
+      if (vkUser) {
+        handleLogin(vkUser);
+        return;
       }
     }
     checkAuth();
