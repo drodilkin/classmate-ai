@@ -1,94 +1,213 @@
-import React, { useState } from 'react';
-import { ShieldCheck, Check, ArrowRight, RefreshCw, Sparkles, Clock, Lock } from 'lucide-react';
-import { getYandexAuthUrl } from '../services/yandexAuth.js';
+import { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { loginWithYandexAndroid, getYandexAuthUrl } from '../services/yandexAuth.js';
 
-export default function AuthModal({ isOpen }) {
+const features = [
+  {
+    icon: '📸',
+    title: 'Фото задания',
+    desc: 'Сфотографируй задачу из учебника — AI решит и объяснит'
+  },
+  {
+    icon: '🤖',
+    title: '6 моделей AI',
+    desc: 'Mistral, DeepSeek, Llama и другие — выбирай лучшую'
+  },
+  {
+    icon: '⚡',
+    title: 'Без VPN',
+    desc: 'Работает в России, в школьной сети и с мобильного'
+  }
+];
+
+export default function AuthModal({ isOpen, onLogin }) {
+  const [slide, setSlide] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [visible, setVisible] = useState(false);
+  const isAndroid = Capacitor.isNativePlatform();
+
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => setVisible(true), 10);
+    } else {
+      setVisible(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleYandexOAuth = () => {
+  const handleYandexLogin = () => {
     setLoading(true);
-    window.location.href = getYandexAuthUrl();
+    setError('');
+
+    if (isAndroid) {
+      loginWithYandexAndroid(
+        (user) => {
+          setLoading(false);
+          onLogin(user);
+        },
+        (err) => {
+          setLoading(false);
+          setError('Ошибка входа. Попробуй ещё раз.');
+          console.error(err);
+        }
+      );
+    } else {
+      window.location.href = getYandexAuthUrl();
+    }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-      {/* Background Animated Glow */}
-      <div className="absolute w-72 h-72 rounded-full bg-gradient-to-tr from-red-500/20 to-indigo-500/20 blur-3xl pointer-events-none animate-pulse" />
-
-      <div className="relative w-full max-w-md bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/80 p-6 sm:p-8 space-y-6 animate-scale-up">
-        
-        {/* Brand Header */}
-        <div className="text-center space-y-2.5">
-          <div className="inline-flex items-center justify-center gap-2 py-1 px-3.5 rounded-full bg-gradient-to-r from-red-50 to-orange-50 border border-red-200/60 text-xs font-semibold text-slate-800 shadow-2xs">
-            <span className="w-5 h-5 rounded-full bg-[#fc3f1d] text-white flex items-center justify-center font-bold text-[11px] shadow-xs">
-              Я
-            </span>
-            <span>Яндекс ID Авторизация</span>
-          </div>
-
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-            Вход в <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-700">ClassMate AI</span>
-          </h2>
-          <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
-            Авторизуйся через официальный Яндекс ID для защиты от спама и безлимитного доступа к решению домашки.
-          </p>
+  // SLIDE 0 — Welcome
+  if (slide === 0) {
+    return (
+      <div className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-white transition-opacity duration-500 ${visible ? 'opacity-100' : 'opacity-0'}`}>
+        {/* Background glow */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full bg-indigo-100/60 blur-3xl" />
         </div>
 
-        {/* Features Card with Icons */}
-        <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/60 space-y-2.5 text-xs text-slate-700">
-          <div className="flex items-center gap-2.5">
-            <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-              <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+        <div className="relative flex flex-col items-center gap-8 px-8 max-w-sm w-full">
+          {/* Logo */}
+          <div className="flex flex-col items-center gap-4 animate-[fadeInDown_0.6s_ease_both]">
+            <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-5xl shadow-xl shadow-indigo-200">
+              🎓
             </div>
-            <span>Решение задач и домашки по фото через <strong>Pixtral Vision</strong></span>
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">ClassMate AI</h1>
+              <p className="text-slate-500 text-sm mt-1">Умный помощник для школы</p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            <div className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
-              <Sparkles className="w-3.5 h-3.5" />
-            </div>
-            <span>Топовые модели: DeepSeek R1, Qwen 72B, Codestral</span>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            <div className="w-5 h-5 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
-              <Clock className="w-3.5 h-3.5" />
-            </div>
-            <span>Сессия активна <strong>24 часа</strong> для безопасности</span>
+          {/* CTA */}
+          <div className="w-full flex flex-col gap-3 animate-[fadeInUp_0.6s_0.2s_ease_both_backwards]">
+            <button
+              onClick={() => setSlide(1)}
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-base shadow-lg shadow-indigo-200 active:scale-95 transition-transform"
+            >
+              Начать →
+            </button>
+            <button
+              onClick={handleYandexLogin}
+              disabled={loading}
+              className="w-full py-3.5 rounded-2xl border-2 border-slate-200 text-slate-700 font-semibold text-sm active:scale-95 transition-transform flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <span className="w-6 h-6 rounded-full bg-[#fc3f1d] text-white flex items-center justify-center font-bold text-xs">Я</span>
+                  Войти через Яндекс
+                </>
+              )}
+            </button>
+            {error && <p className="text-red-500 text-xs text-center">{error}</p>}
           </div>
         </div>
+      </div>
+    );
+  }
 
-        {/* Main Action Button */}
-        <div className="space-y-3">
+  // SLIDES 1-3 — Feature onboarding
+  if (slide <= features.length) {
+    const f = features[slide - 1];
+    const isLast = slide === features.length;
+
+    return (
+      <div className={`fixed inset-0 z-50 flex flex-col bg-white transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}>
+        {/* Skip */}
+        <div className="flex justify-end p-5">
           <button
-            type="button"
-            onClick={handleYandexOAuth}
-            disabled={loading}
-            className="w-full py-4 px-5 rounded-2xl bg-slate-950 hover:bg-black text-white font-semibold text-sm shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-3 cursor-pointer group"
+            onClick={() => setSlide(features.length + 1)}
+            className="text-slate-400 text-sm font-medium"
           >
-            {loading ? (
-              <RefreshCw className="w-5 h-5 animate-spin text-white" />
-            ) : (
-              <>
-                {/* Signature Red Circle "Я" */}
-                <div className="w-6 h-6 rounded-full bg-[#fc3f1d] text-white flex items-center justify-center font-bold text-xs shrink-0 group-hover:scale-110 transition-transform shadow-xs">
-                  Я
-                </div>
-                <span className="tracking-wide">Войти с Яндекс ID</span>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
-              </>
-            )}
+            Пропустить
           </button>
         </div>
 
-        {/* Security Footer */}
-        <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 border-t border-slate-100 pt-3">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-          <span>Официальный протокол OAuth 2.0 • РФ Без VPN</span>
+        {/* Content */}
+        <div className="flex-1 flex flex-col items-center justify-center px-8 gap-8">
+          <div key={slide} className="flex flex-col items-center gap-6 animate-[fadeInUp_0.4s_ease_both]">
+            <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-indigo-50 to-violet-100 flex items-center justify-center text-6xl shadow-lg">
+              {f.icon}
+            </div>
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold text-slate-900">{f.title}</h2>
+              <p className="text-slate-500 text-base leading-relaxed">{f.desc}</p>
+            </div>
+          </div>
+
+          {/* Dots */}
+          <div className="flex gap-2">
+            {features.map((_, i) => (
+              <div
+                key={i}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  i === slide - 1
+                    ? 'w-6 bg-indigo-600'
+                    : 'w-2 bg-slate-200'
+                }`}
+              />
+            ))}
+          </div>
         </div>
 
+        {/* Next button */}
+        <div className="p-8">
+          <button
+            onClick={() => setSlide(isLast ? features.length + 1 : slide + 1)}
+            className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-base shadow-lg shadow-indigo-200 active:scale-95 transition-transform"
+          >
+            {isLast ? 'Войти и начать 🚀' : 'Далее →'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // SLIDE final — Login
+  return (
+    <div className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-white transition-opacity duration-500 ${visible ? 'opacity-100' : 'opacity-0'}`}>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full bg-violet-100/60 blur-3xl" />
+      </div>
+
+      <div className="relative flex flex-col items-center gap-8 px-8 max-w-sm w-full animate-[fadeInUp_0.5s_ease_both]">
+        <div className="text-center space-y-2">
+          <div className="text-5xl mb-4">🔐</div>
+          <h2 className="text-2xl font-bold text-slate-900">Войди чтобы начать</h2>
+          <p className="text-slate-500 text-sm">Сессия сохраняется на 24 часа</p>
+        </div>
+
+        <div className="w-full flex flex-col gap-3">
+          <button
+            onClick={handleYandexLogin}
+            disabled={loading}
+            className="w-full py-4 rounded-2xl bg-[#fc3f1d] text-white font-bold text-base shadow-lg shadow-red-200 active:scale-95 transition-transform flex items-center justify-center gap-3"
+          >
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+            ) : (
+              <>
+                <span className="text-2xl font-black">Я</span>
+                Войти через Яндекс ID
+              </>
+            )}
+          </button>
+
+          {error && <p className="text-red-500 text-xs text-center">{error}</p>}
+
+          <p className="text-center text-xs text-slate-400 mt-2">
+            Безопасно · Без паролей · Данные защищены
+          </p>
+        </div>
+
+        <button
+          onClick={() => setSlide(0)}
+          className="text-slate-400 text-sm"
+        >
+          ← Назад
+        </button>
       </div>
     </div>
   );

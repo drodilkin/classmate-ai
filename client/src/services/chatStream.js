@@ -1,5 +1,4 @@
-// Direct AI client streaming with automatic backend fallback
-// Works 100% in Russia without VPN, on any static hosting or server
+import { Capacitor } from '@capacitor/core';
 
 const _mc = [109,115,116,114,108,95,75,66,86,112,106,69,82,51,80,89,109,52,52,53,106,74,75,117,100,103,56,73,69,116,117,85,80,117,89,48,121,87,95,49,97,69,117,76,48];
 const _hc = [104,102,95,121,75,119,69,100,73,84,81,68,116,79,110,86,70,80,76,121,122,90,105,65,74,73,115,87,71,81,119,69,76,103,103,116,111];
@@ -8,51 +7,57 @@ const M_KEY = String.fromCharCode(..._mc);
 const H_KEY = String.fromCharCode(..._hc);
 
 export async function streamChat({ modelId, messages, images, onChunk, signal }) {
-  // 1. First attempt: call local / backend endpoint (/api/chat)
-  try {
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Bypass-Tunnel-Reminder': 'true'
-      },
-      body: JSON.stringify({
-        model: modelId,
-        messages: messages.map(m => ({ role: m.role, content: m.content })),
-        images: images
-      }),
-      signal
-    });
+  // Skip backend on Android/native — go straight to direct AI APIs
+  const isNative = Capacitor.isNativePlatform();
 
-    if (res.ok) {
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
+  // 1. Try backend (/api/chat) only on web
+  if (!isNative) {
+    try {
+      const timeoutCtrl = new AbortController();
+      const timeoutId = setTimeout(() => timeoutCtrl.abort(), 5000);
+      const combinedSignal = signal
+        ? AbortSignal.any ? AbortSignal.any([signal, timeoutCtrl.signal]) : timeoutCtrl.signal
+        : timeoutCtrl.signal;
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true' },
+        body: JSON.stringify({
+          model: modelId,
+          messages: messages.map(m => ({ role: m.role, content: m.content })),
+          images
+        }),
+        signal: combinedSignal
+      });
+      clearTimeout(timeoutId);
 
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || trimmed === 'data: [DONE]') continue;
-          if (trimmed.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(trimmed.slice(6));
-              if (data.content) onChunk(data.content);
-            } catch {}
+      if (res.ok) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed === 'data: [DONE]') continue;
+            if (trimmed.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(trimmed.slice(6));
+                if (data.content) onChunk(data.content);
+              } catch {}
+            }
           }
         }
+        return;
       }
-      return;
+    } catch (err) {
+      if (err.name === 'AbortError' && signal?.aborted) throw err;
+      console.warn('Backend unavailable, using direct AI:', err.message);
     }
-  } catch (err) {
-    if (err.name === 'AbortError') throw err;
-    console.warn('Backend unavailable, switching to direct AI connection:', err.message);
   }
 
   // 2. Direct Fallback: Client -> AI API (Works everywhere without backend, CORS enabled)

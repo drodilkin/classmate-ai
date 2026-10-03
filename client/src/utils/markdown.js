@@ -1,42 +1,21 @@
 import { marked } from 'marked';
 import hljs from 'highlight.js';
+import katex from 'katex';
 
-// Configure marked with highlight.js
-marked.setOptions({
-  gfm: true,
-  breaks: true,
-  highlight: function (code, lang) {
-    if (lang && hljs.getLanguage(lang)) {
-      try {
-        return hljs.highlight(code, { language: lang }).value;
-      } catch (err) {}
-    }
-    try {
-      return hljs.highlightAuto(code).value;
-    } catch (err) {}
-    return code;
-  }
-});
+// Configure marked
+marked.setOptions({ gfm: true, breaks: true });
 
-// Custom renderer to add copy buttons and language badges to code blocks
+// Custom renderer for code blocks
 const renderer = new marked.Renderer();
-
 renderer.code = function ({ text, lang }) {
   const language = lang || 'code';
   let highlighted = text;
-  
   if (language && hljs.getLanguage(language)) {
-    try {
-      highlighted = hljs.highlight(text, { language }).value;
-    } catch (e) {}
+    try { highlighted = hljs.highlight(text, { language }).value; } catch (e) {}
   } else {
-    try {
-      highlighted = hljs.highlightAuto(text).value;
-    } catch (e) {}
+    try { highlighted = hljs.highlightAuto(text).value; } catch (e) {}
   }
-
   const encodedCode = encodeURIComponent(text);
-
   return `
     <div class="code-block-wrapper my-3 rounded-lg overflow-hidden border border-slate-800 bg-[#0d1117]">
       <div class="code-header flex items-center justify-between px-3.5 py-1.5 bg-[#161b22] border-b border-slate-800 text-xs text-slate-400">
@@ -59,31 +38,69 @@ renderer.code = function ({ text, lang }) {
 
 marked.use({ renderer });
 
-// Global copy helper for buttons inserted in markdown HTML
+// Global copy helper
 if (typeof window !== 'undefined') {
   window.__copyCode = function (button, encodedCode) {
     try {
       const code = decodeURIComponent(encodedCode);
       navigator.clipboard.writeText(code).then(() => {
         const span = button.querySelector('span');
-        const orig = span ? span.innerText : 'Копировать';
-        if (span) span.innerText = 'Скопировано! ✓';
+        if (span) { span.innerText = 'Скопировано! ✓'; }
         button.classList.add('text-emerald-400');
         setTimeout(() => {
-          if (span) span.innerText = orig;
+          if (span) span.innerText = 'Копировать';
           button.classList.remove('text-emerald-400');
         }, 2000);
       });
-    } catch (e) {
-      console.error('Failed to copy:', e);
-    }
+    } catch (e) {}
   };
+}
+
+// Render LaTeX math with KaTeX
+function renderMath(text) {
+  // Display math: $$...$$ or \[...\]
+  text = text.replace(/\$\$([^$]+?)\$\$/gs, (_, math) => {
+    try {
+      return katex.renderToString(math.trim(), { displayMode: true, throwOnError: false, output: 'html' });
+    } catch { return `<span class="text-red-400 text-xs">[math error]</span>`; }
+  });
+
+  text = text.replace(/\\\[(.+?)\\\]/gs, (_, math) => {
+    try {
+      return katex.renderToString(math.trim(), { displayMode: true, throwOnError: false, output: 'html' });
+    } catch { return `<span class="text-red-400 text-xs">[math error]</span>`; }
+  });
+
+  // Inline math: $...$ (not $$)
+  text = text.replace(/(?<!\$)\$(?!\$)([^$\n]+?)(?<!\$)\$(?!\$)/g, (_, math) => {
+    try {
+      return katex.renderToString(math.trim(), { displayMode: false, throwOnError: false, output: 'html' });
+    } catch { return `<code>${math}</code>`; }
+  });
+
+  // Inline math: \(...\)
+  text = text.replace(/\\\((.+?)\\\)/gs, (_, math) => {
+    try {
+      return katex.renderToString(math.trim(), { displayMode: false, throwOnError: false, output: 'html' });
+    } catch { return `<code>${math}</code>`; }
+  });
+
+  // Handle raw LaTeX commands outside $: \frac, \sqrt, etc.
+  text = text.replace(/(?<![\\$`])(\\(?:frac|sqrt|sum|int|lim|sin|cos|tan|log|ln|alpha|beta|gamma|delta|theta|lambda|mu|pi|sigma|omega|infty|cdot|times|div|pm|leq|geq|neq|approx|in|subset|cup|cap|forall|exists)\{[^}]*\}\{[^}]*\})/g, (match) => {
+    try {
+      return katex.renderToString(match.trim(), { displayMode: false, throwOnError: false, output: 'html' });
+    } catch { return `<code>${match}</code>`; }
+  });
+
+  return text;
 }
 
 export function parseMarkdown(content) {
   if (!content) return '';
   try {
-    return marked.parse(content);
+    // First render math, then markdown
+    const withMath = renderMath(content);
+    return marked.parse(withMath);
   } catch (err) {
     console.error('Markdown parse error:', err);
     return content;
