@@ -93,18 +93,18 @@ export default function ChatInput({ onSend, onStop, streaming }) {
   };
 
   return (
-    <div className="p-3 sm:p-4 bg-white border-t border-slate-200 shrink-0 relative">
+    <div className="p-3 sm:p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0 relative transition-colors">
       <div className="max-w-3xl mx-auto">
         {/* Images Preview Strip */}
         {images.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-2 p-2 bg-slate-50 border border-slate-200 rounded-xl">
+          <div className="flex flex-wrap gap-2 mb-2 p-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl">
             {images.map((img, idx) => (
-              <div key={idx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-300 shadow-2xs group">
+              <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-300 dark:border-slate-600 shadow-2xs group">
                 <img src={img} alt="preview" className="w-full h-full object-cover" />
                 <button
                   type="button"
                   onClick={() => removeImage(idx)}
-                  className="absolute top-1 right-1 bg-slate-900/70 hover:bg-slate-900 text-white rounded-full p-0.5 transition-colors cursor-pointer"
+                  className="absolute top-1 right-1 bg-slate-900/80 hover:bg-slate-900 text-white rounded-full p-0.5 transition-colors cursor-pointer"
                   title="Удалить фото"
                 >
                   <X className="w-3 h-3" />
@@ -115,7 +115,7 @@ export default function ChatInput({ onSend, onStop, streaming }) {
         )}
 
         {/* Input Card */}
-        <div className="relative flex items-end gap-2 bg-slate-50/80 border border-slate-200 focus-within:border-orange-500/50 focus-within:bg-white focus-within:ring-2 focus-within:ring-orange-500/10 rounded-2xl p-2 transition-all shadow-2xs">
+        <div className="relative flex items-end gap-2 bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 focus-within:border-indigo-500/60 focus-within:bg-white dark:focus-within:bg-slate-800 focus-within:ring-2 focus-within:ring-indigo-500/10 rounded-2xl p-2 transition-all shadow-2xs">
           
           {/* Hidden Inputs for Camera and Gallery */}
           <input
@@ -142,8 +142,8 @@ export default function ChatInput({ onSend, onStop, streaming }) {
               onClick={() => setMenuOpen(prev => !prev)}
               className={`p-2 rounded-xl transition-all cursor-pointer flex items-center justify-center ${
                 menuOpen 
-                  ? 'bg-orange-500 text-white rotate-45 shadow-sm' 
-                  : 'text-slate-500 hover:text-orange-600 hover:bg-slate-200/60'
+                  ? 'bg-indigo-600 text-white rotate-45 shadow-sm' 
+                  : 'text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
               }`}
               title="Добавить фото: Камера или Галерея"
             >
@@ -152,9 +152,9 @@ export default function ChatInput({ onSend, onStop, streaming }) {
 
             {/* Popup Menu */}
             {menuOpen && (
-              <div className="absolute bottom-12 left-0 z-50 w-52 bg-white rounded-2xl shadow-xl border border-slate-200/80 p-1.5 animate-msg-in">
-                <div className="px-2.5 py-1.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-100 mb-1">
-                  Прикрепить фото
+              <div className="absolute bottom-12 left-0 z-50 w-56 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200/80 dark:border-slate-700 p-1.5 animate-scale-up">
+                <div className="px-2.5 py-1.5 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-700/60 mb-1">
+                  Прикрепить фото задания
                 </div>
 
                 {/* Option 1: Camera */}
@@ -164,14 +164,14 @@ export default function ChatInput({ onSend, onStop, streaming }) {
                     setMenuOpen(false);
                     cameraInputRef.current?.click();
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-xs font-medium text-slate-700 hover:bg-orange-50 hover:text-orange-950 transition-colors cursor-pointer group"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-orange-50 dark:hover:bg-orange-950/40 hover:text-orange-950 dark:hover:text-orange-200 transition-colors cursor-pointer group"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 group-hover:bg-orange-200 transition-colors">
+                  <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <Camera className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="font-semibold text-slate-900 group-hover:text-orange-950">Сделать фото</div>
-                    <div className="text-[10px] text-slate-400">Открыть камеру телефона</div>
+                    <div className="font-semibold text-slate-900 dark:text-white">Сделать фото</div>
+                    <div className="text-[10px] text-slate-400 dark:text-slate-500">Открыть камеру телефона</div>
                   </div>
                 </button>
 
@@ -182,14 +182,14 @@ export default function ChatInput({ onSend, onStop, streaming }) {
                     setMenuOpen(false);
                     galleryInputRef.current?.click();
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-xs font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-950 transition-colors cursor-pointer group"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-950 dark:hover:text-indigo-200 transition-colors cursor-pointer group"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 group-hover:bg-indigo-200 transition-colors">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <GalleryIcon className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="font-semibold text-slate-900 group-hover:text-indigo-950">Галерея / Файлы</div>
-                    <div className="text-[10px] text-slate-400">Выбрать готовые фото</div>
+                    <div className="font-semibold text-slate-900 dark:text-white">Галерея / Файлы</div>
+                    <div className="text-[10px] text-slate-400 dark:text-slate-500">Выбрать готовые фото</div>
                   </div>
                 </button>
               </div>
@@ -204,8 +204,8 @@ export default function ChatInput({ onSend, onStop, streaming }) {
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
-            placeholder="Спроси о чём угодно или отправь задание..."
-            className="w-full bg-transparent resize-none outline-none text-slate-800 text-sm placeholder:text-slate-400 py-1.5 px-1 max-h-44 leading-relaxed"
+            placeholder="Спроси о чём угодно или отправь фото задания..."
+            className="w-full bg-transparent resize-none outline-none text-slate-800 dark:text-slate-100 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 py-1.5 px-1 max-h-44 leading-relaxed"
           />
 
           {/* Action Button: Send or Stop */}
@@ -214,7 +214,7 @@ export default function ChatInput({ onSend, onStop, streaming }) {
               type="button"
               onClick={onStop}
               className="p-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl transition-colors cursor-pointer shrink-0 shadow-2xs"
-              title="Остановить генерацию"
+              title="Остановить ответ"
             >
               <StopCircle className="w-5 h-5 text-orange-400" />
             </button>
@@ -226,8 +226,8 @@ export default function ChatInput({ onSend, onStop, streaming }) {
               className={`
                 p-2 rounded-xl transition-all cursor-pointer shrink-0 shadow-2xs
                 ${(!text.trim() && images.length === 0)
-                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                  : 'bg-orange-500 hover:bg-orange-600 text-white active:scale-95'}
+                  ? 'bg-slate-200 dark:bg-slate-700/60 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white active:scale-95 shadow-sm shadow-indigo-500/20'}
               `}
               title="Отправить (Enter)"
             >
@@ -236,9 +236,9 @@ export default function ChatInput({ onSend, onStop, streaming }) {
           )}
         </div>
 
-        <div className="flex items-center justify-between mt-1.5 px-2 text-[11px] text-slate-400">
-          <span>Нажми «+» для камеры или галереи (также работает Ctrl+V)</span>
-          <span>ClassMate AI • РФ Без VPN</span>
+        <div className="flex items-center justify-between mt-1.5 px-2 text-[11px] text-slate-400 dark:text-slate-500">
+          <span>Нажми «+» для камеры или фото (или Ctrl+V)</span>
+          <span>ClassMate AI • Быстро и без VPN</span>
         </div>
       </div>
     </div>
