@@ -1,15 +1,71 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowUp, Plus, Camera, Image as GalleryIcon, X, StopCircle } from 'lucide-react';
+import { ArrowUp, Plus, Camera, Image as GalleryIcon, X, StopCircle, Mic, MicOff, Zap, ListOrdered, CheckCircle2 } from 'lucide-react';
+
+const QUICK_MATH = ['√', 'x²', 'π', '±', '≤', '≥', '÷', '≈', '°'];
 
 export default function ChatInput({ onSend, onStop, streaming }) {
   const [text, setText] = useState('');
   const [images, setImages] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
 
   const textareaRef = useRef(null);
   const cameraInputRef = useRef(null);
   const galleryInputRef = useRef(null);
   const menuRef = useRef(null);
+  const recognitionRef = useRef(null);
+
+  // Initialize Speech Recognition
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'ru-RU';
+
+      recognition.onresult = (event) => {
+        let currentTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          currentTranscript += event.results[i][0].transcript;
+        }
+        setText((prev) => {
+          const base = prev.trim() ? prev.trim() + ' ' : '';
+          return base + currentTranscript;
+        });
+      };
+
+      recognition.onerror = (event) => {
+        console.warn('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      alert('Голосовой ввод не поддерживается вашим браузером или устройством');
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (err) {
+        console.error('Speech recognition start failed:', err);
+      }
+    }
+  };
 
   // Auto-resize textarea
   useEffect(() => {
@@ -76,6 +132,12 @@ export default function ChatInput({ onSend, onStop, streaming }) {
   const handleSubmit = (e) => {
     if (e) e.preventDefault();
     if ((!text.trim() && images.length === 0) || streaming) return;
+
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+
     onSend(text.trim(), images);
     setText('');
     setImages([]);
@@ -92,12 +154,80 @@ export default function ChatInput({ onSend, onStop, streaming }) {
     }
   };
 
+  // Append Quick Modifier (e.g. "Кратко в строчку")
+  const appendModifierAndSend = (instruction) => {
+    const baseText = text.trim();
+    if (!baseText && images.length === 0) return;
+    const finalText = baseText ? `${baseText}\n\n[Инструкция: ${instruction}]` : `[Инструкция: ${instruction}]`;
+    onSend(finalText, images);
+    setText('');
+    setImages([]);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+  };
+
+  const insertSymbol = (sym) => {
+    setText((prev) => prev + sym);
+    textareaRef.current?.focus();
+  };
+
   return (
-    <div className="p-3 sm:p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0 relative transition-colors">
-      <div className="max-w-3xl mx-auto">
+    <div className="p-2.5 sm:p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0 relative transition-colors">
+      <div className="max-w-3xl mx-auto space-y-2">
+        {/* Quick action chips & formula toolbar */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+          {/* "Кратко в строчку" chip */}
+          <button
+            type="button"
+            onClick={() => appendModifierAndSend('Ответь максимально кратко, ровно в одну строчку.')}
+            disabled={!text.trim() && images.length === 0}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/80 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-all cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs"
+            title="Получить ответ ровно в одну строчку"
+          >
+            <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
+            <span>⚡ Кратко в строчку</span>
+          </button>
+
+          {/* "Пошагово" chip */}
+          <button
+            type="button"
+            onClick={() => appendModifierAndSend('Объясни подробное решение пошагово по пунктам с правилами.')}
+            disabled={!text.trim() && images.length === 0}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-all cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs"
+          >
+            <ListOrdered className="w-3 h-3 text-indigo-500" />
+            <span>Пошагово</span>
+          </button>
+
+          {/* "Только ответ" chip */}
+          <button
+            type="button"
+            onClick={() => appendModifierAndSend('Напиши только итоговый ответ без лишних рассуждений.')}
+            disabled={!text.trim() && images.length === 0}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-all cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs"
+          >
+            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+            <span>Только ответ</span>
+          </button>
+
+          {/* Math symbols */}
+          <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-1 shrink-0" />
+          {QUICK_MATH.map((sym) => (
+            <button
+              key={sym}
+              type="button"
+              onClick={() => insertSymbol(sym)}
+              className="px-2 py-0.5 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-200/60 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-mono text-xs border border-slate-200/60 dark:border-slate-700/60 transition-colors shrink-0 cursor-pointer"
+            >
+              {sym}
+            </button>
+          ))}
+        </div>
+
         {/* Images Preview Strip */}
         {images.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-2 p-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl">
+          <div className="flex flex-wrap gap-2 p-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl">
             {images.map((img, idx) => (
               <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-300 dark:border-slate-600 shadow-2xs group">
                 <img src={img} alt="preview" className="w-full h-full object-cover" />
@@ -115,7 +245,11 @@ export default function ChatInput({ onSend, onStop, streaming }) {
         )}
 
         {/* Input Card */}
-        <div className="relative flex items-end gap-2 bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 focus-within:border-indigo-500/60 focus-within:bg-white dark:focus-within:bg-slate-800 focus-within:ring-2 focus-within:ring-indigo-500/10 rounded-2xl p-2 transition-all shadow-2xs">
+        <div className={`relative flex items-end gap-1.5 sm:gap-2 bg-slate-50/90 dark:bg-slate-800/80 border ${
+          isListening 
+            ? 'border-red-500 ring-2 ring-red-500/20 bg-red-50/20 dark:bg-red-950/20' 
+            : 'border-slate-200 dark:border-slate-700/80 focus-within:border-indigo-500/60 focus-within:ring-2 focus-within:ring-indigo-500/10'
+        } rounded-2xl p-1.5 sm:p-2 transition-all shadow-2xs`}>
           
           {/* Hidden Inputs for Camera and Gallery */}
           <input
@@ -154,7 +288,7 @@ export default function ChatInput({ onSend, onStop, streaming }) {
             {menuOpen && (
               <div className="absolute bottom-12 left-0 z-50 w-56 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200/80 dark:border-slate-700 p-1.5 animate-scale-up">
                 <div className="px-2.5 py-1.5 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-700/60 mb-1">
-                  Прикрепить фото задания
+                  Прикрепить задание
                 </div>
 
                 {/* Option 1: Camera */}
@@ -196,6 +330,24 @@ export default function ChatInput({ onSend, onStop, streaming }) {
             )}
           </div>
 
+          {/* Voice Input Microphone Button */}
+          <button
+            type="button"
+            onClick={toggleListening}
+            className={`p-2 rounded-xl transition-all cursor-pointer flex items-center justify-center shrink-0 ${
+              isListening
+                ? 'bg-red-500 text-white animate-pulse shadow-sm shadow-red-500/30'
+                : 'text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
+            }`}
+            title={isListening ? 'Остановить запись' : 'Голосовой ввод (надиктовать)'}
+          >
+            {isListening ? (
+              <MicOff className="w-4 h-4" />
+            ) : (
+              <Mic className="w-4 h-4" />
+            )}
+          </button>
+
           {/* Text Area */}
           <textarea
             ref={textareaRef}
@@ -204,7 +356,7 @@ export default function ChatInput({ onSend, onStop, streaming }) {
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
-            placeholder="Спроси о чём угодно или отправь фото задания..."
+            placeholder={isListening ? 'Говорите, слушаю...' : 'Спроси о чём угодно или надиктуй...'}
             className="w-full bg-transparent resize-none outline-none text-slate-800 dark:text-slate-100 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 py-1.5 px-1 max-h-44 leading-relaxed"
           />
 
@@ -236,9 +388,9 @@ export default function ChatInput({ onSend, onStop, streaming }) {
           )}
         </div>
 
-        <div className="flex items-center justify-between mt-1.5 px-2 text-[11px] text-slate-400 dark:text-slate-500">
-          <span>Нажми «+» для камеры или фото (или Ctrl+V)</span>
-          <span>ClassMate AI • Быстро и без VPN</span>
+        <div className="flex items-center justify-between px-2 text-[11px] text-slate-400 dark:text-slate-500">
+          <span>Нажми ⚡ «Кратко в строчку» для моментального лаконичного ответа</span>
+          <span>ClassMate AI</span>
         </div>
       </div>
     </div>

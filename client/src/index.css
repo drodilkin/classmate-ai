@@ -173,6 +173,36 @@
   font-weight: 600;
 }
 
+/* Dark mode styling for prose-mistral */
+.dark .prose-mistral {
+  color: #f1f5f9;
+}
+
+.dark .prose-mistral p,
+.dark .prose-mistral li {
+  color: #e2e8f0;
+}
+
+.dark .prose-mistral h1,
+.dark .prose-mistral h2,
+.dark .prose-mistral h3 {
+  color: #ffffff;
+}
+
+.dark .prose-mistral strong {
+  color: #ffffff;
+}
+
+.dark .prose-mistral code:not(pre code) {
+  background-color: #1e293b;
+  color: #fb923c;
+  border: 1px solid #334155;
+}
+
+.dark .prose-mistral a {
+  color: #60a5fa;
+}
+
 @keyframes slideInRight {
   from { opacity: 0; transform: translateX(12px); }
   to { opacity: 1; transform: translateX(0); }

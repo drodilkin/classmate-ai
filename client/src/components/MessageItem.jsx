@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Copy, Check, ZoomIn, X } from 'lucide-react';
+import { Copy, Check, ZoomIn, X, Share2 } from 'lucide-react';
 import { parseMarkdown } from '../utils/markdown.js';
 
 export default function MessageItem({ message, isLast, streaming }) {
   const [copied, setCopied] = useState(false);
+  const [shared, setShared] = useState(false);
   const [selectedImg, setSelectedImg] = useState(null);
 
   const isUser = message.role === 'user';
@@ -12,6 +13,25 @@ export default function MessageItem({ message, isLast, streaming }) {
     navigator.clipboard.writeText(message.content || '');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShare = async () => {
+    const textToShare = message.content || '';
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Решение от ClassMate AI',
+          text: textToShare,
+        });
+        return;
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+      }
+    }
+    // Fallback: copy to clipboard
+    navigator.clipboard.writeText(textToShare);
+    setShared(true);
+    setTimeout(() => setShared(false), 2000);
   };
 
   const formattedTime = message.timestamp
@@ -110,23 +130,45 @@ export default function MessageItem({ message, isLast, streaming }) {
             </span>
 
             {message.content && (
-              <button
-                onClick={handleCopy}
-                className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded-md hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer text-xs flex items-center gap-1"
-                title="Скопировать ответ"
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">Скопировано</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" />
-                    <span className="text-[11px]">Копировать</span>
-                  </>
-                )}
-              </button>
+              <div className="flex items-center gap-1">
+                {/* Share button */}
+                <button
+                  onClick={handleShare}
+                  className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer text-xs flex items-center gap-1"
+                  title="Поделиться решением"
+                >
+                  {shared ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">Отправлено!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="w-3.5 h-3.5" />
+                      <span className="text-[11px] hidden sm:inline">Поделиться</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Copy button */}
+                <button
+                  onClick={handleCopy}
+                  className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer text-xs flex items-center gap-1"
+                  title="Скопировать ответ"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">Скопировано</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span className="text-[11px] hidden sm:inline">Копировать</span>
+                    </>
+                  )}
+                </button>
+              </div>
             )}
           </div>
 
