@@ -213,21 +213,24 @@ export default function App() {
   };
 
   // Send Message
-  const handleSend = async (userText, images = []) => {
+  const handleSend = async (userText, images = [], chosenExercise = null) => {
     if ((!userText && images.length === 0) || streaming) return;
 
     let finalImages = [...images];
     let promptContext = '';
-    let autoDetected = null;
+    let autoDetected = chosenExercise;
 
     // Auto-detect if user requested a textbook exercise and didn't provide a photo
     if (finalImages.length === 0 && userText) {
-      autoDetected = detectExerciseInQuery(userText, activeChat?.subject);
+      if (!autoDetected) {
+        autoDetected = detectExerciseInQuery(userText, activeChat?.subject);
+      }
       if (autoDetected) {
         try {
           const rendered = await renderPdfPageToDataUrl(autoDetected.bookFile, autoDetected.page, 1.5);
           finalImages = [rendered.dataUrl];
-          promptContext = `[Прикреплена страница ${autoDetected.page} учебника «${autoDetected.subjectName}» с заданием №${autoDetected.number}. Внимательно посмотри на фото страницы, найди номер ${autoDetected.number} и реши его полностью и пошагово:]\n`;
+          const name = autoDetected.fullName || autoDetected.subjectName || 'Учебник';
+          promptContext = `[Прикреплена страница ${autoDetected.page} учебника «${name}» с заданием №${autoDetected.number}. Внимательно посмотри на фото страницы, найди номер ${autoDetected.number} и реши его полностью и пошагово:]\n`;
         } catch (err) {
           console.warn('Auto textbook page render failed:', err);
         }

@@ -11,6 +11,7 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
   const [menuOpen, setMenuOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [attachingExercise, setAttachingExercise] = useState(false);
+  const [selectedSubjectOverride, setSelectedSubjectOverride] = useState(null);
 
   const textareaRef = useRef(null);
   const cameraInputRef = useRef(null);
@@ -132,6 +133,14 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
     setImages(prev => prev.filter((_, i) => i !== idx));
   };
 
+  const detectedExercise = detectExerciseInQuery(text, activeSubject);
+  const currentAlternative = detectedExercise
+    ? (detectedExercise.alternatives?.find(a => a.id === selectedSubjectOverride) ||
+       detectedExercise.alternatives?.find(a => a.id === detectedExercise.subject) ||
+       detectedExercise.alternatives?.[0] ||
+       detectedExercise)
+    : null;
+
   const handleSubmit = (e) => {
     if (e) e.preventDefault();
     if ((!text.trim() && images.length === 0) || streaming) return;
@@ -141,9 +150,10 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
       setIsListening(false);
     }
 
-    onSend(text.trim(), images);
+    onSend(text.trim(), images, currentAlternative);
     setText('');
     setImages([]);
+    setSelectedSubjectOverride(null);
     setMenuOpen(false);
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -162,21 +172,20 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
     const baseText = text.trim();
     if (!baseText && images.length === 0) return;
     const finalText = baseText ? `${baseText}\n\n[Инструкция: ${instruction}]` : `[Инструкция: ${instruction}]`;
-    onSend(finalText, images);
+    onSend(finalText, images, currentAlternative);
     setText('');
     setImages([]);
+    setSelectedSubjectOverride(null);
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
   };
 
-  const detectedExercise = detectExerciseInQuery(text, activeSubject);
-
   const handleAttachExercisePage = async () => {
-    if (!detectedExercise || attachingExercise) return;
+    if (!currentAlternative || attachingExercise) return;
     setAttachingExercise(true);
     try {
-      const res = await renderPdfPageToDataUrl(detectedExercise.bookFile, detectedExercise.page, 1.4);
+      const res = await renderPdfPageToDataUrl(currentAlternative.bookFile, currentAlternative.page, 1.4);
       setImages(prev => [...prev, res.dataUrl]);
     } catch (err) {
       alert('Ошибка при загрузке страницы: ' + err.message);
@@ -243,23 +252,48 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
           ))}
         </div>
 
-        {/* Auto-detected Textbook Exercise Chip */}
-        {detectedExercise && (
-          <div className="flex items-center justify-between px-3.5 py-2 rounded-2xl bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 dark:from-slate-800 dark:via-indigo-950/60 dark:to-purple-950/40 border border-indigo-200/90 dark:border-indigo-800/80 shadow-xs animate-fadeIn">
-            <div className="flex items-center gap-2 text-indigo-950 dark:text-indigo-200 min-w-0 pr-2">
+        {/* Auto-detected Textbook Exercise Chip with 1-tap Subject Switch */}
+        {detectedExercise && currentAlternative && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-2.5 sm:px-3 sm:py-2 rounded-2xl bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 dark:from-slate-800 dark:via-indigo-950/60 dark:to-purple-950/40 border border-indigo-200/90 dark:border-indigo-800/80 shadow-xs animate-fadeIn">
+            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5">
               <span className="text-base shrink-0">📖</span>
-              <div className="text-xs truncate">
-                <span className="font-bold">{detectedExercise.subjectName}</span>
-                <span className="text-slate-600 dark:text-slate-300 ml-1.5 font-medium">
-                  №{detectedExercise.number} · <strong className="text-indigo-600 dark:text-indigo-400">стр. {detectedExercise.page}</strong>
-                </span>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-100 shrink-0">
+                №{detectedExercise.number}:
+              </span>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {detectedExercise.alternatives?.map((alt) => {
+                  const isSelected = alt.id === currentAlternative.id;
+                  return (
+                    <button
+                      key={alt.id}
+                      type="button"
+                      onClick={() => setSelectedSubjectOverride(alt.id)}
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-indigo-600 text-white font-bold shadow-xs scale-102 ring-2 ring-indigo-500/30'
+                          : 'bg-white/90 dark:bg-slate-700/80 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 border border-slate-200/70 dark:border-slate-600/70'
+                      }`}
+                      title={alt.fullName}
+                    >
+                      <span>{alt.icon}</span>
+                      <span>{alt.shortLabel}</span>
+                      <span className={`text-[10px] px-1 py-0.2 rounded-md ${
+                        isSelected 
+                          ? 'bg-indigo-700 text-indigo-100 font-semibold' 
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                      }`}>
+                        стр. {alt.page}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
             <button
               type="button"
               onClick={handleAttachExercisePage}
               disabled={attachingExercise}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer shrink-0 disabled:opacity-60"
+              className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer shrink-0 disabled:opacity-60"
             >
               <Camera className="w-3.5 h-3.5" />
               <span>{attachingExercise ? 'Подготовка...' : 'Прикрепить страницу'}</span>
