@@ -45,7 +45,7 @@ renderer.image = function ({ href, title, text }) {
         <img src="${href}" alt="${safeText}" class="w-full h-auto object-cover block" loading="lazy" />
       </div>
       <div class="relative z-10 p-2.5 bg-slate-900/98 border-t border-slate-800 flex items-center justify-between text-xs text-slate-300">
-        <span class="font-semibold text-yellow-400 flex items-center gap-1.5 truncate max-w-[70%]">🍌 ${safeText}</span>
+        <span class="font-semibold text-yellow-400 flex items-center gap-1.5 truncate max-w-[70%]">🍌 ${safeText} • Gemini Nano Banana 2</span>
         <a href="${href}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold text-[11px] transition-colors shrink-0">
           📥 Открыть 4K
         </a>
