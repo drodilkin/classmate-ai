@@ -1,11 +1,11 @@
 {
-  "name": "ClassMate AI — Универсальный ИИ",
-  "short_name": "ClassMate AI",
-  "description": "Универсальный искусственный интеллект для любых задач",
+  "name": "AI Omni Hub — Клод, Дипсик, Гемини",
+  "short_name": "AI Omni Hub",
+  "description": "Нейросети Claude, DeepSeek и Gemini без VPN в России",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#090d16",
-  "theme_color": "#090d16",
+  "theme_color": "#2563eb",
   "icons": [
     {
       "src": "/icon.svg",
