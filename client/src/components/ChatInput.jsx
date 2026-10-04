@@ -185,23 +185,6 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
             <span>Только ответ</span>
           </button>
 
-          {/* "Нано Банана" image generation chip */}
-          <button
-            type="button"
-            onClick={() => {
-              triggerHaptic('light');
-              setText(prev => {
-                const base = prev.trim();
-                return base ? `Нарисуй арт: ${base}` : 'Нарисуй арт: ';
-              });
-              if (textareaRef.current) textareaRef.current.focus();
-            }}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/80 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-all cursor-pointer shrink-0 shadow-2xs native-touch"
-            title="Сгенерировать 4K арт нейросетью Nano Banana"
-          >
-            <span>🍌</span>
-            <span>Нано Банана</span>
-          </button>
 
           {/* Math symbols */}
           <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-1 shrink-0" />

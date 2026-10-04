@@ -7,31 +7,6 @@ const M_KEY = String.fromCharCode(..._mc);
 const H_KEY = String.fromCharCode(..._hc);
 
 export async function streamChat({ modelId, messages, images, onChunk, signal }) {
-  // 1. Google Gemini Nano Banana 2 Image Generation Engine
-  const lastUserMsg = messages[messages.length - 1]?.content?.trim() || '';
-  const isImageModel = modelId === 'image/nano-banana-2' || modelId === 'image/nano-banana' || modelId.startsWith('image/');
-  const isDrawCommand = /^(нарисуй|сгенерируй|создай картинку|нарисуй мне|draw|generate image|создай изображение|нарисуй арт|арт|нарисуй в стиле|банана|нано банана|nano banana)\b/i.test(lastUserMsg);
-
-  if (isImageModel || (isDrawCommand && (!images || images.length === 0))) {
-    let promptQuery = lastUserMsg.replace(/^(нарисуй|сгенерируй|создай картинку|нарисуй мне|draw|generate image|создай изображение|нарисуй арт|арт|нарисуй в стиле|банана|нано банана|nano banana)\s*/i, '').trim();
-    if (!promptQuery) promptQuery = lastUserMsg || 'кинематографичный космический пейзаж';
-
-    onChunk('🍌 **Запуск Google Gemini Nano Banana 2 (Flash Image)...**\n\n');
-    await new Promise(r => setTimeout(r, 200));
-    onChunk('⚡ *Рендеринг 4K Ultra на архитектуре Gemini с защитой SynthID...*\n\n');
-    await new Promise(r => setTimeout(r, 250));
-
-    const seed = Math.floor(Math.random() * 999999999);
-    // Google Imagen / Gemini 3.1 Flash Image quality booster
-    const enhancedPrompt = `${promptQuery}, 8k resolution, google imagen style, photorealistic, intricate details, masterpiece, sharp text rendering, octane render`;
-    const encoded = encodeURIComponent(enhancedPrompt);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=1280&height=1280&seed=${seed}`;
-
-    onChunk(`> 🍌 **Запрос:** *«${promptQuery}»*\n\n`);
-    onChunk(`![${promptQuery}](${imageUrl})\n\n`);
-    onChunk(`🍌 *Нейросеть: **Gemini Nano Banana 2** (Google DeepMind • Gemini 3.1 Flash Image • 4K SynthID)*`);
-    return;
-  }
 
   // Skip backend on Android/native — go straight to direct AI APIs
   const isNative = Capacitor.isNativePlatform();

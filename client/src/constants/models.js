@@ -15,22 +15,7 @@ export const MODELS = [
     vision: true,
     reasoning: false,
   },
-  {
-    id: 'image/nano-banana-2',
-    name: 'Gemini Nano Banana 2',
-    fullName: 'Google Gemini Nano Banana 2 (Flash Image)',
-    company: 'Google AI',
-    cat: 'google',
-    badge: '🍌 Nano Banana 2 • Google',
-    letter: 'G',
-    color: '#eab308',
-    desc: 'Новейшая модель генерации от Google на базе Gemini 3.1 Flash Image. 4K апскейлинг, четкий текст и невидимый SynthID.',
-    ctx: '4K Ultra',
-    speed: 'Мгновенно',
-    vision: true,
-    reasoning: false,
-    imageGen: true,
-  },
+
   {
     id: 'hf/deepseek-r1-14b',
     name: 'DeepSeek R1',
