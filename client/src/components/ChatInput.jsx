@@ -185,7 +185,7 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
             <span>Только ответ</span>
           </button>
 
-          {/* "Арт 4K" image generation chip */}
+          {/* "Нано Банана" image generation chip */}
           <button
             type="button"
             onClick={() => {
@@ -196,11 +196,11 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
               });
               if (textareaRef.current) textareaRef.current.focus();
             }}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/80 hover:bg-purple-100 dark:hover:bg-purple-900/60 transition-all cursor-pointer shrink-0 shadow-2xs native-touch"
-            title="Сгенерировать 4K изображение нейросетью Midjourney Ultra"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/80 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-all cursor-pointer shrink-0 shadow-2xs native-touch"
+            title="Сгенерировать 4K арт нейросетью Nano Banana"
           >
-            <Sparkles className="w-3.5 h-3.5 text-purple-500 fill-purple-500/20" />
-            <span>✨ Арт 4K</span>
+            <span>🍌</span>
+            <span>Нано Банана</span>
           </button>
 
           {/* Math symbols */}

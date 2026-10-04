@@ -36,6 +36,24 @@ renderer.code = function ({ text, lang }) {
   `;
 };
 
+// Custom renderer for images: clean Banana frame covering any watermark
+renderer.image = function ({ href, title, text }) {
+  const safeText = text || 'Изображение Nano Banana';
+  return `
+    <div class="my-3 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700/80 shadow-md bg-slate-900 max-w-xl">
+      <div class="relative overflow-hidden" style="margin-bottom: -38px;">
+        <img src="${href}" alt="${safeText}" class="w-full h-auto object-cover block" loading="lazy" />
+      </div>
+      <div class="relative z-10 p-2.5 bg-slate-900/98 border-t border-slate-800 flex items-center justify-between text-xs text-slate-300">
+        <span class="font-semibold text-yellow-400 flex items-center gap-1.5 truncate max-w-[70%]">🍌 ${safeText}</span>
+        <a href="${href}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold text-[11px] transition-colors shrink-0">
+          📥 Открыть 4K
+        </a>
+      </div>
+    </div>
+  `;
+};
+
 marked.use({ renderer });
 
 // Global copy helper
