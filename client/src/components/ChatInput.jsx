@@ -1,13 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowUp, Plus, Camera, Image as GalleryIcon, X, StopCircle, Mic, MicOff, Zap, ListOrdered, CheckCircle2, BookOpen } from 'lucide-react';
+import { detectExerciseInQuery } from '../constants/exerciseIndex.js';
+import { renderPdfPageToDataUrl } from '../services/pdfRenderer.js';
 
 const QUICK_MATH = ['√', 'x²', 'π', '±', '≤', '≥', '÷', '≈', '°'];
 
-export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks }) {
+export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, activeSubject }) {
   const [text, setText] = useState('');
   const [images, setImages] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [attachingExercise, setAttachingExercise] = useState(false);
 
   const textareaRef = useRef(null);
   const cameraInputRef = useRef(null);
@@ -167,6 +170,21 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks }
     }
   };
 
+  const detectedExercise = detectExerciseInQuery(text, activeSubject);
+
+  const handleAttachExercisePage = async () => {
+    if (!detectedExercise || attachingExercise) return;
+    setAttachingExercise(true);
+    try {
+      const res = await renderPdfPageToDataUrl(detectedExercise.bookFile, detectedExercise.page, 1.4);
+      setImages(prev => [...prev, res.dataUrl]);
+    } catch (err) {
+      alert('Ошибка при загрузке страницы: ' + err.message);
+    } finally {
+      setAttachingExercise(false);
+    }
+  };
+
   const insertSymbol = (sym) => {
     setText((prev) => prev + sym);
     textareaRef.current?.focus();
@@ -224,6 +242,30 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks }
             </button>
           ))}
         </div>
+
+        {/* Auto-detected Textbook Exercise Chip */}
+        {detectedExercise && (
+          <div className="flex items-center justify-between px-3.5 py-2 rounded-2xl bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 dark:from-slate-800 dark:via-indigo-950/60 dark:to-purple-950/40 border border-indigo-200/90 dark:border-indigo-800/80 shadow-xs animate-fadeIn">
+            <div className="flex items-center gap-2 text-indigo-950 dark:text-indigo-200 min-w-0 pr-2">
+              <span className="text-base shrink-0">📖</span>
+              <div className="text-xs truncate">
+                <span className="font-bold">{detectedExercise.subjectName}</span>
+                <span className="text-slate-600 dark:text-slate-300 ml-1.5 font-medium">
+                  №{detectedExercise.number} · <strong className="text-indigo-600 dark:text-indigo-400">стр. {detectedExercise.page}</strong>
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleAttachExercisePage}
+              disabled={attachingExercise}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer shrink-0 disabled:opacity-60"
+            >
+              <Camera className="w-3.5 h-3.5" />
+              <span>{attachingExercise ? 'Подготовка...' : 'Прикрепить страницу'}</span>
+            </button>
+          </div>
+        )}
 
         {/* Images Preview Strip */}
         {images.length > 0 && (

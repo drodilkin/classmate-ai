@@ -10,6 +10,8 @@ import { streamChat } from './services/chatStream.js';
 import AuthModal from './components/AuthModal.jsx';
 import { checkAndHandleYandexToken } from './services/yandexAuth.js';
 import { ArrowRight, Image as ImgIcon, Zap } from 'lucide-react';
+import { detectExerciseInQuery } from './constants/exerciseIndex.js';
+import { renderPdfPageToDataUrl } from './services/pdfRenderer.js';
 
 const STORAGE_CHATS = 'mistral_chats_v1';
 const STORAGE_MODEL = 'mistral_model_v1';
@@ -154,7 +156,12 @@ export default function App() {
 
   // Handle New Chat with Subject
   const handleNewChatWithSubject = (subjectName) => {
-    const c = createChat(modelId, subjectName);
+    let subjKey = null;
+    if (/алгебр|математ/i.test(subjectName)) subjKey = 'algebra_7';
+    else if (/геометр/i.test(subjectName)) subjKey = 'geometry_7_9';
+    else if (/русск/i.test(subjectName)) subjKey = 'russian_7_1';
+
+    const c = { ...createChat(modelId, subjectName), subject: subjKey };
     setChats(prev => [c, ...prev]);
     setActiveChatId(c.id);
   };
@@ -209,11 +216,29 @@ export default function App() {
   const handleSend = async (userText, images = []) => {
     if ((!userText && images.length === 0) || streaming) return;
 
-    // Create user message object
+    let finalImages = [...images];
+    let promptContext = '';
+    let autoDetected = null;
+
+    // Auto-detect if user requested a textbook exercise and didn't provide a photo
+    if (finalImages.length === 0 && userText) {
+      autoDetected = detectExerciseInQuery(userText, activeChat?.subject);
+      if (autoDetected) {
+        try {
+          const rendered = await renderPdfPageToDataUrl(autoDetected.bookFile, autoDetected.page, 1.5);
+          finalImages = [rendered.dataUrl];
+          promptContext = `[Прикреплена страница ${autoDetected.page} учебника «${autoDetected.subjectName}» с заданием №${autoDetected.number}. Внимательно посмотри на фото страницы, найди номер ${autoDetected.number} и реши его полностью и пошагово:]\n`;
+        } catch (err) {
+          console.warn('Auto textbook page render failed:', err);
+        }
+      }
+    }
+
+    // Create user message object (displays the attached textbook page in the chat!)
     const userMsg = {
       role: 'user',
       content: userText,
-      images: images.length > 0 ? images : undefined,
+      images: finalImages.length > 0 ? finalImages : undefined,
       timestamp: new Date().toISOString()
     };
 
@@ -246,24 +271,50 @@ export default function App() {
 
     // Prepare messages with system prompt & textbook context
     const customPrompt = localStorage.getItem(STORAGE_PROMPT);
-    const textbookPrompt = `Ты — ClassMate AI, школьный помощник по программе 7 класса ФГОС.
-В приложение загружены учебники:
-1) АЛГЕБРА 7 класс (Макарычев Ю.Н. под ред. Теляковского, 2023): выражения, тождества, линейные уравнения, функции y=kx+b, степени, одночлены, многочлены, формулы сокращенного умножения, системы линейных уравнений.
-2) ГЕОМЕТРИЯ 7-9 класс (Атанасян Л.С.): прямые, отрезки, углы, признаки равенства треугольников, медианы/биссектрисы/высоты, параллельные прямые, сумма углов треугольника (180°), прямоугольные треугольники.
-3) РУССКИЙ ЯЗЫК 7 класс (Баранов М.Т., Ладыженская Т.А., 2023, ч. 1): причастия (суффиксы, Н и НН, НЕ с причастиями, причастный оборот), деепричастия (суффиксы, деепричастный оборот), наречия (степени сравнения, НЕ и НИ, Н и НН, дефис, О/А на конце).
-Решай задачи пошагово, пиши формулы в LaTeX ($x^2$, \\frac{a}{b}), приводи правила и теоремы.`;
+    const textbookPrompt = `Ты — ClassMate AI, лучший школьный помощник и репетитор для 7 класса (ФГОС).
+В приложение встроены официальные школьные учебники:
+1) АЛГЕБРА 7 класс (Ю.Н. Макарычев, Н.Г. Миндюк, под ред. С.А. Теляковского, Просвещение 2023): выражения, тождества, линейные уравнения с одной переменной, функции y=kx+b, степень, одночлены, многочлены, формулы сокращенного умножения, системы линейных уравнений.
+2) ГЕОМЕТРИЯ 7-9 классы (Л.С. Атанасян, В.Ф. Бутузов и др.): отрезки, лучи, углы, признаки равенства треугольников, медианы/биссектрисы/высоты, параллельные прямые, сумма углов треугольника (180°), прямоугольные треугольники.
+3) РУССКИЙ ЯЗЫК 7 класс Часть 1 (М.Т. Баранов, Т.А. Ладыженская, Л.А. Тростенцова, Просвещение 2023): причастия (суффиксы, Н и НН, НЕ с причастиями, причастный оборот), деепричастия (суффиксы, деепричастный оборот), наречия (степени сравнения, НЕ и НИ, Н и НН, дефис, О/А на конце).
+
+ПРАВИЛА РЕШЕНИЯ ЗАДАНИЙ:
+- Если к сообщению прикреплено фото страницы учебника: внимательно найди на фото нужный номер упражнения/задачи.
+- Прочитай точный текст задания со страницы и реши все пункты (а, б, в, г...) по порядку.
+- Все формулы пиши в LaTeX ($x^2$, \\frac{a}{b}, \\sqrt{x}, \\angle ABC, ^\\circ).
+- Оформляй решение аккуратно: "Дано", "Решение", "Ответ". Объясняй каждый шаг, как в образцовой школьной тетради.`;
 
     const fullSystemPrompt = customPrompt && customPrompt.trim()
       ? `${customPrompt.trim()}\n\n[База знаний учебников:]\n${textbookPrompt}`
       : textbookPrompt;
 
-    const messagesToSend = [{ role: 'system', content: fullSystemPrompt }, ...newMsgs];
+    // If auto-detected, inject context into the last user message for API
+    const messagesToSend = [{ role: 'system', content: fullSystemPrompt }];
+    for (let i = 0; i < newMsgs.length; i++) {
+      const msg = newMsgs[i];
+      if (i === newMsgs.length - 1 && promptContext) {
+        messagesToSend.push({
+          role: 'user',
+          content: `${promptContext}${msg.content}`
+        });
+      } else {
+        messagesToSend.push({ role: msg.role, content: msg.content });
+      }
+    }
+
+    // Ensure vision-capable model is used if images are attached
+    let effectiveModel = modelId;
+    if (finalImages.length > 0) {
+      const currentModelObj = MODELS.find(m => m.id === modelId);
+      if (!currentModelObj || !currentModelObj.vision) {
+        effectiveModel = 'mistral/pixtral-12b-2409';
+      }
+    }
 
     try {
       await streamChat({
-        modelId,
+        modelId: effectiveModel,
         messages: messagesToSend,
-        images,
+        images: finalImages,
         signal: ctrl.signal,
         onChunk: (chunk) => {
           setChats(prev =>
@@ -461,6 +512,7 @@ export default function App() {
           onSend={handleSend}
           onStop={handleStop}
           streaming={streaming}
+          activeSubject={activeChat?.subject}
           onOpenTextbooks={() => setTextbooksOpen(true)}
         />
       </div>

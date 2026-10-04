@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, BookOpen, ChevronDown, ChevronUp, Sparkles, Download, Camera, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
+import { X, BookOpen, ChevronDown, ChevronUp, Sparkles, Download, Camera, ArrowLeft, ArrowRight, Loader2, Search } from 'lucide-react';
 import { TEXTBOOKS } from '../constants/textbooks.js';
 import { renderPdfPageToDataUrl } from '../services/pdfRenderer.js';
+import { findPageForExercise } from '../constants/exerciseIndex.js';
 
 export default function TextbooksModal({ isOpen, onClose, onAskBookTopic, onSendBookPage }) {
   const [activeBookId, setActiveBookId] = useState(TEXTBOOKS[0].id);
@@ -12,6 +13,7 @@ export default function TextbooksModal({ isOpen, onClose, onAskBookTopic, onSend
   const [pageInput, setPageInput] = useState('36');
   const [currentPage, setCurrentPage] = useState(36);
   const [totalPages, setTotalPages] = useState(257);
+  const [exerciseInput, setExerciseInput] = useState('');
   const [pagePreview, setPagePreview] = useState(null);
   const [loadingPage, setLoadingPage] = useState(false);
 
@@ -19,6 +21,7 @@ export default function TextbooksModal({ isOpen, onClose, onAskBookTopic, onSend
 
   // Set default page when changing book
   useEffect(() => {
+    setExerciseInput('');
     if (activeBookId === 'algebra_7') {
       setCurrentPage(36);
       setPageInput('36');
@@ -76,12 +79,22 @@ export default function TextbooksModal({ isOpen, onClose, onAskBookTopic, onSend
     setPageInput(String(p));
   };
 
+  const handleSearchExercise = (val) => {
+    setExerciseInput(val);
+    const num = parseInt(val, 10);
+    if (num && num > 0) {
+      const p = findPageForExercise(activeBookId, num);
+      handleGoToPage(p);
+    }
+  };
+
   const handleSendToAi = async () => {
     setLoadingPage(true);
     try {
       // High-res render for AI
       const res = await renderPdfPageToDataUrl(currentBook.file, currentPage, 1.5);
-      const textPrompt = `Реши задания со страницы ${currentPage} учебника «${currentBook.title}» (${currentBook.authors}). Объясни всё подробно и пошагово с формулами:`;
+      const exNumText = exerciseInput.trim() ? `задание №${exerciseInput.trim()}` : `задания`;
+      const textPrompt = `Реши ${exNumText} со страницы ${currentPage} учебника «${currentBook.title}» (${currentBook.authors}). Объясни всё подробно и пошагово с формулами:`;
       if (onSendBookPage) {
         onSendBookPage(textPrompt, [res.dataUrl]);
       } else if (onAskBookTopic) {
@@ -177,39 +190,53 @@ export default function TextbooksModal({ isOpen, onClose, onAskBookTopic, onSend
                   </p>
                 </div>
 
-                {/* Page Navigation Controls */}
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => handleGoToPage(currentPage - 1)}
-                    disabled={currentPage <= 1}
-                    className="p-2 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 disabled:opacity-40 transition-colors cursor-pointer"
-                    title="Предыдущая страница"
-                  >
-                    <ArrowLeft className="w-4 h-4 text-slate-700 dark:text-slate-200" />
-                  </button>
-
-                  <div className="flex items-center gap-1 text-xs">
-                    <span className="text-slate-500">Стр.</span>
+                {/* Exercise Search & Page Navigation Controls */}
+                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                  {/* Quick Task # Input */}
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/90 dark:border-indigo-800 text-xs">
+                    <span className="text-indigo-600 dark:text-indigo-400 font-bold whitespace-nowrap">№ задачи:</span>
                     <input
                       type="number"
-                      value={pageInput}
-                      onChange={(e) => setPageInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleGoToPage(parseInt(pageInput, 10) || 1);
-                      }}
-                      className="w-16 px-2 py-1.5 rounded-lg border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-slate-800 text-center font-bold text-xs text-indigo-900 dark:text-indigo-200 outline-none"
+                      placeholder="148"
+                      value={exerciseInput}
+                      onChange={(e) => handleSearchExercise(e.target.value)}
+                      className="w-14 px-1.5 py-1 rounded-lg border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-slate-800 text-center font-bold text-xs text-indigo-900 dark:text-indigo-200 outline-none"
                     />
-                    <span className="text-slate-400">из {totalPages}</span>
                   </div>
 
-                  <button
-                    onClick={() => handleGoToPage(currentPage + 1)}
-                    disabled={currentPage >= totalPages}
-                    className="p-2 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 disabled:opacity-40 transition-colors cursor-pointer"
-                    title="Следующая страница"
-                  >
-                    <ArrowRight className="w-4 h-4 text-slate-700 dark:text-slate-200" />
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => handleGoToPage(currentPage - 1)}
+                      disabled={currentPage <= 1}
+                      className="p-2 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 disabled:opacity-40 transition-colors cursor-pointer"
+                      title="Предыдущая страница"
+                    >
+                      <ArrowLeft className="w-4 h-4 text-slate-700 dark:text-slate-200" />
+                    </button>
+
+                    <div className="flex items-center gap-1 text-xs">
+                      <span className="text-slate-500">Стр.</span>
+                      <input
+                        type="number"
+                        value={pageInput}
+                        onChange={(e) => setPageInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleGoToPage(parseInt(pageInput, 10) || 1);
+                        }}
+                        className="w-14 px-1.5 py-1 rounded-lg border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-slate-800 text-center font-bold text-xs text-indigo-900 dark:text-indigo-200 outline-none"
+                      />
+                      <span className="text-slate-400">из {totalPages}</span>
+                    </div>
+
+                    <button
+                      onClick={() => handleGoToPage(currentPage + 1)}
+                      disabled={currentPage >= totalPages}
+                      className="p-2 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 disabled:opacity-40 transition-colors cursor-pointer"
+                      title="Следующая страница"
+                    >
+                      <ArrowRight className="w-4 h-4 text-slate-700 dark:text-slate-200" />
+                    </button>
+                  </div>
                 </div>
               </div>
 
