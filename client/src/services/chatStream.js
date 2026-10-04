@@ -7,14 +7,36 @@ const M_KEY = String.fromCharCode(..._mc);
 const H_KEY = String.fromCharCode(..._hc);
 
 export async function streamChat({ modelId, messages, images, onChunk, signal }) {
+  // 1. FLUX.1 Image Generation Engine (or natural drawing request)
+  const lastUserMsg = messages[messages.length - 1]?.content?.trim() || '';
+  const isImageModel = modelId === 'image/flux-schnell';
+  const isDrawCommand = /^(нарисуй|сгенерируй|создай картинку|нарисуй мне|draw|generate image|создай изображение|нарисуй арт)\b/i.test(lastUserMsg);
+
+  if (isImageModel || (isDrawCommand && (!images || images.length === 0))) {
+    let promptQuery = lastUserMsg.replace(/^(нарисуй|сгенерируй|создай картинку|нарисуй мне|draw|generate image|создай изображение|нарисуй арт)\s*/i, '').trim();
+    if (!promptQuery) promptQuery = lastUserMsg || 'красивый космический пейзаж';
+
+    onChunk('🎨 **Генерация изображения (FLUX.1 Schnell)...**\n\n');
+    await new Promise(r => setTimeout(r, 350));
+
+    const seed = Math.floor(Math.random() * 99999999);
+    const encoded = encodeURIComponent(promptQuery);
+    const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=1024&nologo=true&model=flux&seed=${seed}`;
+
+    onChunk(`> 🖼️ **Промпт:** *«${promptQuery}»*\n\n`);
+    onChunk(`![${promptQuery}](${imageUrl})\n\n`);
+    onChunk(`✨ *Нейросеть: **FLUX.1 Schnell** (Black Forest Labs)* • [📥 Открыть в оригинале](${imageUrl})`);
+    return;
+  }
+
   // Skip backend on Android/native — go straight to direct AI APIs
   const isNative = Capacitor.isNativePlatform();
 
-  // 1. Try backend (/api/chat) only on web
+  // 2. Try backend (/api/chat) only on web if available
   if (!isNative) {
     try {
       const timeoutCtrl = new AbortController();
-      const timeoutId = setTimeout(() => timeoutCtrl.abort(), 5000);
+      const timeoutId = setTimeout(() => timeoutCtrl.abort(), 4000);
       const combinedSignal = signal
         ? AbortSignal.any ? AbortSignal.any([signal, timeoutCtrl.signal]) : timeoutCtrl.signal
         : timeoutCtrl.signal;
@@ -60,7 +82,7 @@ export async function streamChat({ modelId, messages, images, onChunk, signal })
     }
   }
 
-  // 2. Direct Fallback: Client -> AI API (Works everywhere without backend, CORS enabled)
+  // 3. Direct AI Routing: Mistral / Pixtral Vision (Supports Images & Code)
   if (modelId.startsWith('mistral/') || (images && images.length > 0)) {
     let targetModel = 'pixtral-12b-2409';
     if (modelId.includes('code') || modelId.includes('codestral')) {
@@ -132,12 +154,18 @@ export async function streamChat({ modelId, messages, images, onChunk, signal })
       }
     }
   } else {
-    // Hugging Face direct
+    // 4. Direct Hugging Face Router: DeepSeek R1, Llama 3.3 70B, Qwen 2.5 72B, Gemma 3
     let targetModel = 'Qwen/Qwen2.5-72B-Instruct';
     if (modelId.includes('deepseek') || modelId.includes('r1')) {
       targetModel = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-14B';
+    } else if (modelId.includes('llama-3.3') || modelId.includes('70b')) {
+      targetModel = 'meta-llama/Llama-3.3-70B-Instruct';
     } else if (modelId.includes('llama')) {
       targetModel = 'meta-llama/Llama-3.1-8B-Instruct';
+    } else if (modelId.includes('gemma')) {
+      targetModel = 'google/gemma-3-4b-it';
+    } else if (modelId.includes('qwen')) {
+      targetModel = 'Qwen/Qwen2.5-72B-Instruct';
     }
 
     const formattedMessages = messages.map(m => ({

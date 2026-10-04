@@ -238,6 +238,23 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
             <span>Только ответ</span>
           </button>
 
+          {/* "Нарисуй" image generation chip */}
+          <button
+            type="button"
+            onClick={() => {
+              setText(prev => {
+                const base = prev.trim();
+                return base ? `Нарисуй: ${base}` : 'Нарисуй: ';
+              });
+              if (textareaRef.current) textareaRef.current.focus();
+            }}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-pink-50 dark:bg-pink-950/50 text-pink-700 dark:text-pink-300 border border-pink-200/80 dark:border-pink-800/80 hover:bg-pink-100 dark:hover:bg-pink-900/60 transition-all cursor-pointer shrink-0 shadow-2xs"
+            title="Сгенерировать картинку нейросетью FLUX.1"
+          >
+            <span>🎨</span>
+            <span>Нарисуй</span>
+          </button>
+
           {/* Math symbols */}
           <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-1 shrink-0" />
           {QUICK_MATH.map((sym) => (
