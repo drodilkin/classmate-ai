@@ -21,16 +21,19 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
 
 
-    <script type="module" crossorigin src="./assets/index-BfS-Hc2V.js"></script>
+    <script type="module" crossorigin src="./assets/index-tOG9G5gF.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-BoyPNP3L.css">
   </head>
   <body>
     <div id="root"></div>
     <script>
+      // Clean up any stale service workers to prevent blank cache screens
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(() => {});
-        });
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (const registration of registrations) {
+            registration.unregister().catch(() => {});
+          }
+        }).catch(() => {});
       }
     </script>
   </body>
