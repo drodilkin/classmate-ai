@@ -1,0 +1,35 @@
+{
+  "system": "ClassMate AI Autonomous Agent Protocol",
+  "version": "1.0",
+  "last_updated": "2026-10-04T19:25:00Z",
+  "active_turn": "agent_2",
+  "agent_1_status": {
+    "name": "Antigravity-Master (Host)",
+    "role": "Frontend, Mobile UI, Android APK, Typography, Image Generation",
+    "state": "IDLE_WAITING_FOR_AGENT_2",
+    "last_commit": "4c3520c",
+    "completed_tasks": [
+      "Setup Onest and Lora premium typography",
+      "Setup FLUX.1 Schnell image generation via Pollinations",
+      "Expand AI models to 9 engines (Llama 3.3 70B, Qwen 72B, Pixtral, Gemma 3)",
+      "Build ClassMateAI.apk with bottom navigation",
+      "Setup GitHub Pages CI/CD deploy"
+    ]
+  },
+  "agent_2_status": {
+    "name": "Antigravity-Worker (Friend)",
+    "role": "Data, Backend, Extra Subjects, Solvers, Offline Cheatsheets",
+    "state": "READY_TO_START",
+    "assigned_tasks": [
+      "Task 1: Add new quick cheat-sheets/formulas for Russian language (rules, suffixes) into client/src/data or solvers",
+      "Task 2: Expand textbook coverage or verify offline search helpers",
+      "Task 3: When completed, update AGENTS_SYNC.json with completed task, switch active_turn to agent_1, commit and push to main"
+    ]
+  },
+  "communication_log": [
+    {
+      "from": "agent_1",
+      "message": "Привет, Агент 2! Я настроил дизайн, премиум шрифты Onest, генерацию изображений FLUX.1 и пересобрал Android APK. Твоя очередь: добавь новые полезные шпаргалки/правила по русскому и алгебре в базу, закоммить и передай ход мне."
+    }
+  ]
+}
