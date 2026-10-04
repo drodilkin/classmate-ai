@@ -33,7 +33,7 @@ function createChat(modelId, title = 'Новый диалог') {
   return {
     id: 'c_' + Date.now(),
     title,
-    model: modelId || 'mistral/pixtral-12b-2409',
+    model: modelId || 'deepseek/chat',
     messages: [],
     createdAt: new Date().toISOString()
   };
@@ -100,7 +100,7 @@ export default function App() {
   const [heroPrompt, setHeroPrompt] = useState('');
 
   const [modelId, setModelId] = useState(() => {
-    return localStorage.getItem(STORAGE_MODEL) || 'mistral/pixtral-12b-2409';
+    return localStorage.getItem(STORAGE_MODEL) || 'deepseek/chat';
   });
 
   const [chats, setChats] = useState(() => {

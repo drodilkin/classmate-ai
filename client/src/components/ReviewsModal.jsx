@@ -70,12 +70,12 @@ export default function ReviewsModal({ isOpen, onClose, user }) {
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
 
     try {
-      const newRev = addReview({
+      const newRev = await addReview({
         author: author.trim() || (user ? user.name : ''),
         role,
         rating,
@@ -90,7 +90,7 @@ export default function ReviewsModal({ isOpen, onClose, user }) {
       setText('');
       setCaptchaInput('');
       setSubmittedReview(newRev);
-      loadAll();
+      await loadAll();
       refreshCaptcha();
     } catch (err) {
       setErrorMessage(err.message || 'Ошибка отправки отзыва.');
@@ -133,15 +133,16 @@ export default function ReviewsModal({ isOpen, onClose, user }) {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h2 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white truncate">
-                  Отзывы учеников
+                  Отзывы пользователей
                 </h2>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-bold flex items-center gap-1 shrink-0">
                   <span>★</span> {stats.average}
                 </span>
               </div>
-              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
-                Реальные отзывы без ботов ({stats.total})
-              </p>
+              <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <span>Общая база данных • {stats.total} отзывов</span>
+              </div>
             </div>
           </div>
 
@@ -219,27 +220,16 @@ export default function ReviewsModal({ isOpen, onClose, user }) {
               </div>
             )}
 
-            {/* Success message banner with GitHub sync button */}
+            {/* Success message banner */}
             {submittedReview && (
-              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-xs space-y-2 animate-fade-in">
+              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-xs space-y-1.5 animate-fade-in">
                 <div className="flex items-center gap-2 font-bold">
-                  <Check className="w-4 h-4 text-emerald-500" />
-                  <span>Спасибо! Ваш отзыв успешно сохранён и отображается на сайте.</span>
+                  <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>Отзыв успешно опубликован в общей базе данных!</span>
                 </div>
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-[11px] text-emerald-700 dark:text-emerald-300">
-                    Хотите, чтобы ваш отзыв был навсегда виден всем в репозитории проекта?
-                  </span>
-                  <a
-                    href={getGitHubReviewIssueUrl(submittedReview)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] transition-colors"
-                  >
-                    <span>На GitHub</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
+                <p className="text-[11px] text-emerald-700 dark:text-emerald-300 pl-6">
+                  Ваш отзыв сохранён в реальном времени и теперь виден абсолютно всем пользователям сайта и Android приложения.
+                </p>
               </div>
             )}
 

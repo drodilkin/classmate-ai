@@ -1,15 +1,30 @@
-// Multi-AI models catalog (All work in Russia without VPN + Free)
 export const MODELS = [
+  {
+    id: 'deepseek/chat',
+    name: 'DeepSeek V3',
+    fullName: 'DeepSeek V3 (671B Флагман)',
+    company: 'DeepSeek AI',
+    cat: 'deepseek',
+    badge: '⚡ Моментальный ответ',
+    letter: 'D',
+    color: '#0ea5e9',
+    desc: 'Ультра-быстрая флагманская модель нового поколения. Мгновенно решает задачи, пишет код и тексты.',
+    ctx: '128K',
+    speed: 'Молния',
+    vision: false,
+    reasoning: false,
+  },
+
   {
     id: 'mistral/pixtral-12b-2409',
     name: 'Pixtral 12B',
-    fullName: 'Mistral Pixtral 12B',
+    fullName: 'Mistral Pixtral 12B Vision',
     company: 'Mistral AI',
     cat: 'mistral',
     badge: '📸 Фото & Зрение',
     letter: 'P',
     color: '#ff7000',
-    desc: 'Флагманская модель со зрением. Распознаёт фото задач, документы, графики.',
+    desc: 'Модель со зрением. Распознаёт фото задач, документы, графики.',
     ctx: '128K',
     speed: 'Быстро',
     vision: true,
@@ -17,9 +32,9 @@ export const MODELS = [
   },
 
   {
-    id: 'hf/deepseek-r1-14b',
+    id: 'deepseek/reasoner',
     name: 'DeepSeek R1',
-    fullName: 'DeepSeek R1 (14B Reasoning)',
+    fullName: 'DeepSeek R1 (Reasoning)',
     company: 'DeepSeek AI',
     cat: 'deepseek',
     badge: '🧠 Мышление R1',
