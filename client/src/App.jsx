@@ -500,32 +500,34 @@ export default function App() {
 
           {activeChat.messages.length === 0 ? (
             /* LMSYS Arena Style Centered Hero & Prompt Card */
-            <div className="max-w-3xl mx-auto px-4 py-8 sm:py-16 space-y-8 animate-msg-in flex flex-col items-center justify-center min-h-[75vh]">
+            <div className="max-w-3xl mx-auto px-4 py-8 sm:py-14 space-y-7 animate-msg-in flex flex-col items-center justify-center min-h-[75vh]">
               
-              {/* Branding (Arena Style: Logo + Serif Italic Highlight) */}
-              <div className="text-center space-y-2">
-                <div className="flex items-center justify-center gap-2.5">
-                  <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white flex items-center justify-center text-base font-bold shadow-sm">
-                    🎓
+              {/* Branding (Arena Style: Logo Badge + Premium Typography) */}
+              <div className="text-center space-y-2.5">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/70 text-slate-700 dark:text-slate-300 shadow-2xs mb-1">
+                  <span className="text-sm">🎓</span>
+                  <span className="text-xs font-bold tracking-tight text-slate-900 dark:text-slate-100 font-sans">
+                    ClassMate AI
                   </span>
-                  <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-sans">
-                    ClassMate
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                    7 класс ФГОС
                   </span>
                 </div>
                 
-                <h1 className="text-2xl sm:text-4xl font-normal text-slate-800 dark:text-slate-100 tracking-tight">
+                <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.15]">
                   Твой персональный{' '}
-                  <span className="font-serif italic bg-amber-300 dark:bg-amber-400 text-slate-950 px-2 py-0.5 rounded-md font-semibold inline-block transform -rotate-1 shadow-2xs">
+                  <span className="font-serif italic font-normal text-amber-950 dark:text-amber-950 px-3.5 py-0.5 rounded-xl bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-300 shadow-md shadow-amber-500/25 inline-block transform -rotate-1 select-none">
                     репетитор
                   </span>
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                  Решай задания по фото, учись по учебникам 7 класса и получай объяснения по шагам
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-lg mx-auto leading-relaxed">
+                  Поможет решить домашку по фото, найдет упражнение в учебниках 7 класса и объяснит всё по шагам простыми словами
                 </p>
               </div>
 
-              {/* Big Centered Search & Prompt Box (Like Arena) */}
-              <div className="w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl p-3 sm:p-4 shadow-lg shadow-slate-200/40 dark:shadow-black/40 space-y-3 transition-all focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/10">
+              {/* Big Centered Search & Prompt Box */}
+              <div className="w-full max-w-2xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 shadow-xl shadow-slate-200/50 dark:shadow-black/50 space-y-3 transition-all focus-within:border-indigo-500 dark:focus-within:border-indigo-500/80 focus-within:ring-4 focus-within:ring-indigo-500/10">
                 <textarea
                   value={heroPrompt}
                   onChange={(e) => setHeroPrompt(e.target.value)}
@@ -540,13 +542,13 @@ export default function App() {
                   }}
                   rows={2}
                   placeholder="Спроси что угодно, сфотографируй задачу или напиши номер (например: упр 89)..."
-                  className="w-full bg-transparent border-none outline-none resize-none text-xs sm:text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 leading-relaxed"
+                  className="w-full bg-transparent border-none outline-none resize-none text-xs sm:text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 leading-relaxed font-sans"
                 />
 
                 {/* Bottom toolbar inside card */}
                 <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80">
                   <div className="flex items-center gap-1.5">
-                    {/* Add Photo Button */}
+                    {/* Camera / Photo Button */}
                     <button
                       type="button"
                       onClick={() => {
@@ -566,10 +568,11 @@ export default function App() {
                         };
                         input.click();
                       }}
-                      className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                      className="p-1.5 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all cursor-pointer flex items-center gap-1 text-xs font-semibold"
                       title="Прикрепить фото задачи"
                     >
-                      <Plus className="w-4 h-4" />
+                      <Camera className="w-4 h-4 text-indigo-500" />
+                      <span className="hidden sm:inline">Фото</span>
                     </button>
 
                     {/* Mode pill */}
@@ -606,10 +609,10 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Get started Section (Arena Minimalist Cards Grid) */}
+              {/* Get started Section (Clean Cards Grid) */}
               <div className="w-full space-y-3">
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 text-left px-1">
-                  Начни с этого (Быстрый выбор)
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 text-left px-1">
+                  Быстрый старт (Нажми для решения)
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
@@ -617,16 +620,21 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => handleSend('Помоги решить задачу по геометрии (Атанасян 7-9 класс): ')}
-                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-xs transition-all text-left space-y-1 cursor-pointer group"
+                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 hover:border-emerald-500/60 dark:hover:border-emerald-500/60 hover:shadow-md hover:-translate-y-0.5 transition-all text-left space-y-1.5 cursor-pointer group"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                        📐 Геометрия 7 класс
-                      </span>
-                      <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all" />
+                      <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-bold shrink-0">
+                          📐
+                        </span>
+                        <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                          Геометрия 7 класс
+                        </span>
+                      </div>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
-                      Признаки треугольников, углы и теоремы
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug pl-9">
+                      Атанасян 7-9 класс, признаки треугольников и теоремы
                     </p>
                   </button>
 
@@ -634,16 +642,21 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => handleSend('номер 148 алгебра')}
-                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-xs transition-all text-left space-y-1 cursor-pointer group"
+                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 hover:border-indigo-500/60 dark:hover:border-indigo-500/60 hover:shadow-md hover:-translate-y-0.5 transition-all text-left space-y-1.5 cursor-pointer group"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                        🔢 Алгебра: номер 148
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs font-bold shrink-0">
+                          🔢
+                        </span>
+                        <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                          Алгебра: номер 148
+                        </span>
+                      </div>
                       <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all" />
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
-                      Уравнения, ФСУ и разбор по Макарычеву
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug pl-9">
+                      Макарычев 7 класс, уравнения и ФСУ с пошаговым разбором
                     </p>
                   </button>
 
@@ -651,16 +664,21 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => handleSend('упр 89')}
-                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-xs transition-all text-left space-y-1 cursor-pointer group"
+                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 hover:border-rose-500/60 dark:hover:border-rose-500/60 hover:shadow-md hover:-translate-y-0.5 transition-all text-left space-y-1.5 cursor-pointer group"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                        🇷🇺 Русский: упр 89
-                      </span>
-                      <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all" />
+                      <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xs font-bold shrink-0">
+                          🇷🇺
+                        </span>
+                        <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                          Русский: упр 89
+                        </span>
+                      </div>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-rose-500 group-hover:translate-x-0.5 transition-all" />
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
-                      Баранов, причастия и орфография
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug pl-9">
+                      Баранов, причастия, деепричастия и орфография
                     </p>
                   </button>
 
@@ -668,16 +686,21 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setTextbooksOpen(true)}
-                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-500 hover:shadow-xs transition-all text-left space-y-1 cursor-pointer group"
+                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 hover:border-amber-500/60 dark:hover:border-amber-500/60 hover:shadow-md hover:-translate-y-0.5 transition-all text-left space-y-1.5 cursor-pointer group"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                        📚 Учебники 7 класс
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs font-bold shrink-0">
+                          📚
+                        </span>
+                        <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                          Учебники 7 класс
+                        </span>
+                      </div>
                       <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-amber-500 group-hover:translate-x-0.5 transition-all" />
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
-                      Открыть онлайн PDF и читать страницы
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug pl-9">
+                      Открыть онлайн PDF учебников и читать страницы
                     </p>
                   </button>
 
@@ -685,16 +708,21 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setCheatSheetOpen(true)}
-                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-xs transition-all text-left space-y-1 cursor-pointer group"
+                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 hover:border-violet-500/60 dark:hover:border-violet-500/60 hover:shadow-md hover:-translate-y-0.5 transition-all text-left space-y-1.5 cursor-pointer group"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                        📐 Шпаргалка формул
-                      </span>
-                      <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all" />
+                      <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-lg bg-violet-100 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 flex items-center justify-center text-xs font-bold shrink-0">
+                          ⚡
+                        </span>
+                        <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
+                          Шпаргалка формул
+                        </span>
+                      </div>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-violet-500 group-hover:translate-x-0.5 transition-all" />
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
-                      ФСУ, степени, правила в 1 клик
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug pl-9">
+                      ФСУ, степени, формулы геометрии и правила
                     </p>
                   </button>
 
@@ -702,18 +730,23 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setReviewsOpen(true)}
-                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-500 hover:shadow-xs transition-all text-left space-y-1 cursor-pointer group"
+                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 hover:border-amber-500/60 dark:hover:border-amber-500/60 hover:shadow-md hover:-translate-y-0.5 transition-all text-left space-y-1.5 cursor-pointer group"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                        ⭐ Отзывы учеников
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs font-bold shrink-0">
+                          ⭐
+                        </span>
+                        <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                          Отзывы учеников
+                        </span>
+                      </div>
                       <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 font-bold">
                         4.9 ★
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
-                      Оценки школьников и отзывы о решении
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug pl-9">
+                      Оценки школьников и отзывы о решении задач
                     </p>
                   </button>
                 </div>
