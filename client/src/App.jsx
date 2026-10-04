@@ -7,11 +7,12 @@ import SettingsModal from './components/SettingsModal.jsx';
 import TextbooksModal from './components/TextbooksModal.jsx';
 import CheatSheetModal from './components/CheatSheetModal.jsx';
 import BookmarksModal from './components/BookmarksModal.jsx';
+import ReviewsModal from './components/ReviewsModal.jsx';
 import { MODELS } from './constants/models.js';
 import { streamChat } from './services/chatStream.js';
 import AuthModal from './components/AuthModal.jsx';
 import { checkAndHandleYandexToken } from './services/yandexAuth.js';
-import { ArrowRight, Image as ImgIcon, Zap, Sparkles } from 'lucide-react';
+import { ArrowRight, Image as ImgIcon, Zap, Sparkles, Plus, Camera, Send } from 'lucide-react';
 import { detectExerciseInQuery } from './constants/exerciseIndex.js';
 import { renderPdfPageToDataUrl } from './services/pdfRenderer.js';
 
@@ -50,6 +51,10 @@ export default function App() {
   const [cheatSheetOpen, setCheatSheetOpen] = useState(false);
   // Bookmarks Modal State
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
+  // Reviews Modal State
+  const [reviewsOpen, setReviewsOpen] = useState(false);
+  // Arena Centered Hero input state
+  const [heroPrompt, setHeroPrompt] = useState('');
 
   const [modelId, setModelId] = useState(() => {
     return localStorage.getItem(STORAGE_MODEL) || 'mistral/pixtral-12b-2409';
@@ -386,13 +391,14 @@ export default function App() {
         onOpenTextbooks={() => setTextbooksOpen(true)}
         onOpenCheatSheet={() => setCheatSheetOpen(true)}
         onOpenBookmarks={() => setBookmarksOpen(true)}
+        onOpenReviews={() => setReviewsOpen(true)}
         user={user}
         onLogout={handleLogout}
         onOpenLogin={() => setAuthModalOpen(true)}
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full min-w-0 bg-white dark:bg-slate-900 transition-colors ambient-mesh">
+      <div className="flex-1 flex flex-col h-full min-w-0 bg-white dark:bg-slate-950 transition-colors">
         {/* Top Header */}
         <Header
           sidebarOpen={sidebarOpen}
@@ -407,6 +413,7 @@ export default function App() {
           onOpenCheatSheet={() => setCheatSheetOpen(true)}
           onOpenBookmarks={() => setBookmarksOpen(true)}
           onOpenTextbooks={() => setTextbooksOpen(true)}
+          onOpenReviews={() => setReviewsOpen(true)}
         />
 
         {/* Chat / Messages Area */}
@@ -417,122 +424,226 @@ export default function App() {
         >
 
           {activeChat.messages.length === 0 ? (
-            /* ClassMate AI Empty State - Human & Interactive Design */
-            <div className="max-w-4xl mx-auto px-4 py-6 sm:py-10 space-y-6 sm:space-y-8 animate-msg-in">
-              {/* Main Title Banner */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-indigo-50/80 via-purple-50/60 to-pink-50/40 dark:from-slate-800/80 dark:via-indigo-950/40 dark:to-purple-950/30 border border-indigo-200/80 dark:border-indigo-800/60 shadow-xs">
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-indigo-500/20 ring-2 ring-white/20">
-                      🎓
-                    </span>
-                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                      Твой персональный репетитор
-                    </h1>
+            /* LMSYS Arena Style Centered Hero & Prompt Card */
+            <div className="max-w-3xl mx-auto px-4 py-8 sm:py-16 space-y-8 animate-msg-in flex flex-col items-center justify-center min-h-[75vh]">
+              
+              {/* Branding (Arena Style: Logo + Serif Italic Highlight) */}
+              <div className="text-center space-y-2">
+                <div className="flex items-center justify-center gap-2.5">
+                  <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white flex items-center justify-center text-base font-bold shadow-sm">
+                    🎓
+                  </span>
+                  <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-sans">
+                    ClassMate
+                  </span>
+                </div>
+                
+                <h1 className="text-2xl sm:text-4xl font-normal text-slate-800 dark:text-slate-100 tracking-tight">
+                  Твой персональный{' '}
+                  <span className="font-serif italic bg-amber-300 dark:bg-amber-400 text-slate-950 px-2 py-0.5 rounded-md font-semibold inline-block transform -rotate-1 shadow-2xs">
+                    репетитор
+                  </span>
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                  Решай задания по фото, учись по учебникам 7 класса и получай объяснения по шагам
+                </p>
+              </div>
+
+              {/* Big Centered Search & Prompt Box (Like Arena) */}
+              <div className="w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl p-3 sm:p-4 shadow-lg shadow-slate-200/40 dark:shadow-black/40 space-y-3 transition-all focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/10">
+                <textarea
+                  value={heroPrompt}
+                  onChange={(e) => setHeroPrompt(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      if (heroPrompt.trim()) {
+                        handleSend(heroPrompt.trim());
+                        setHeroPrompt('');
+                      }
+                    }
+                  }}
+                  rows={2}
+                  placeholder="Спроси что угодно, сфотографируй задачу или напиши номер (например: упр 89)..."
+                  className="w-full bg-transparent border-none outline-none resize-none text-xs sm:text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 leading-relaxed"
+                />
+
+                {/* Bottom toolbar inside card */}
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                  <div className="flex items-center gap-1.5">
+                    {/* Add Photo Button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = 'image/*';
+                        input.onchange = (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              handleSend(heroPrompt.trim() || 'Помоги решить задание с фото:', [ev.target.result]);
+                              setHeroPrompt('');
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        };
+                        input.click();
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                      title="Прикрепить фото задачи"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+
+                    {/* Mode pill */}
+                    <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-[11px] font-semibold text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                      <Sparkles className="w-3 h-3 text-indigo-500" />
+                      <span>7 класс</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setTextbooksOpen(true)}
+                      className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 text-[11px] font-semibold border border-amber-200/60 dark:border-amber-800/60 hover:bg-amber-100 transition-colors cursor-pointer"
+                    >
+                      <span>📚</span>
+                      <span>Учебники</span>
+                    </button>
                   </div>
-                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-xl">
-                    Решай домашку по фото, учись по реальным учебникам 7 класса, изучай формулы и готовься к контрольным на «отлично».
-                  </p>
+
+                  {/* Send Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (heroPrompt.trim()) {
+                        handleSend(heroPrompt.trim());
+                        setHeroPrompt('');
+                      }
+                    }}
+                    disabled={!heroPrompt.trim()}
+                    className="flex items-center justify-center w-8 h-8 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-black dark:hover:bg-slate-100 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs active:scale-95"
+                    title="Отправить"
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Get started Section (Arena Minimalist Cards Grid) */}
+              <div className="w-full space-y-3">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 text-left px-1">
+                  Начни с этого (Быстрый выбор)
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                  {/* 1. Geometry */}
                   <button
+                    type="button"
+                    onClick={() => handleSend('Помоги решить задачу по геометрии (Атанасян 7-9 класс): ')}
+                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-xs transition-all text-left space-y-1 cursor-pointer group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                        📐 Геометрия 7 класс
+                      </span>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all" />
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                      Признаки треугольников, углы и теоремы
+                    </p>
+                  </button>
+
+                  {/* 2. Algebra */}
+                  <button
+                    type="button"
+                    onClick={() => handleSend('номер 148 алгебра')}
+                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-xs transition-all text-left space-y-1 cursor-pointer group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                        🔢 Алгебра: номер 148
+                      </span>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all" />
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                      Уравнения, ФСУ и разбор по Макарычеву
+                    </p>
+                  </button>
+
+                  {/* 3. Russian */}
+                  <button
+                    type="button"
+                    onClick={() => handleSend('упр 89')}
+                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-xs transition-all text-left space-y-1 cursor-pointer group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                        🇷🇺 Русский: упр 89
+                      </span>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all" />
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                      Баранов, причастия и орфография
+                    </p>
+                  </button>
+
+                  {/* 4. Textbooks */}
+                  <button
+                    type="button"
                     onClick={() => setTextbooksOpen(true)}
-                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-95"
+                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-500 hover:shadow-xs transition-all text-left space-y-1 cursor-pointer group"
                   >
-                    <span>📚</span>
-                    <span>Учебники</span>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                        📚 Учебники 7 класс
+                      </span>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-amber-500 group-hover:translate-x-0.5 transition-all" />
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                      Открыть онлайн PDF и читать страницы
+                    </p>
                   </button>
+
+                  {/* 5. Formulas */}
                   <button
+                    type="button"
                     onClick={() => setCheatSheetOpen(true)}
-                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-md shadow-indigo-500/20 cursor-pointer active:scale-95"
+                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-xs transition-all text-left space-y-1 cursor-pointer group"
                   >
-                    <span>📐</span>
-                    <span>Формулы</span>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                        📐 Шпаргалка формул
+                      </span>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all" />
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                      ФСУ, степени, правила в 1 клик
+                    </p>
+                  </button>
+
+                  {/* 6. Reviews */}
+                  <button
+                    type="button"
+                    onClick={() => setReviewsOpen(true)}
+                    className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-500 hover:shadow-xs transition-all text-left space-y-1 cursor-pointer group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                        ⭐ Отзывы учеников
+                      </span>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 font-bold">
+                        4.9 ★
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                      Оценки школьников и отзывы о решении
+                    </p>
                   </button>
                 </div>
               </div>
 
-              {/* Main Feature Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Study & Tasks Card */}
-                <div className="p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-800/50 backdrop-blur-xs hover:border-indigo-300 dark:hover:border-indigo-600/60 transition-all space-y-3.5 shadow-2xs">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-lg">
-                      📚
-                    </div>
-                    <div>
-                      <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Домашка & Учёба</h2>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Помощь с любыми предметами и правилами
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-700/60 text-xs">
-                    <button
-                      onClick={() => handleSend('Помоги решить задачу и объясни решение пошагово: ')}
-                      className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/30 transition-all text-left text-slate-700 dark:text-slate-200 font-medium cursor-pointer shadow-2xs group"
-                    >
-                      <span className="flex items-center gap-2">
-                        <span>💡</span>
-                        <span>Решить задачу с пошаговым объяснением</span>
-                      </span>
-                      <ArrowRight className="w-3.5 h-3.5 text-indigo-500 shrink-0 group-hover:translate-x-0.5 transition-transform" />
-                    </button>
-
-                    <button
-                      onClick={() => handleSend('Объясни мне подробно тему с формулами и примерами: ')}
-                      className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/30 transition-all text-left text-slate-700 dark:text-slate-200 font-medium cursor-pointer shadow-2xs group"
-                    >
-                      <span className="flex items-center gap-2">
-                        <span>📖</span>
-                        <span>Разобрать непонятную школьную тему</span>
-                      </span>
-                      <ArrowRight className="w-3.5 h-3.5 text-indigo-500 shrink-0 group-hover:translate-x-0.5 transition-transform" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Photo HW Card (Vision) */}
-                <div className="p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-800/50 backdrop-blur-xs hover:border-purple-300 dark:hover:border-purple-600/60 transition-all space-y-3.5 shadow-2xs">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-lg">
-                      📸
-                    </div>
-                    <div>
-                      <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Решение по фото & Номеру</h2>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Сделай фото или просто напиши номер задания
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-700/60 text-xs">
-                    <button
-                      onClick={() => handleSend('упр 89')}
-                      className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-500 hover:bg-purple-50/40 dark:hover:bg-purple-950/30 transition-all text-left text-slate-700 dark:text-slate-200 font-medium cursor-pointer shadow-2xs group"
-                    >
-                      <span className="flex items-center gap-2">
-                        <span>🇷🇺</span>
-                        <span>Например: «упр 89» (Русский язык)</span>
-                      </span>
-                      <ArrowRight className="w-3.5 h-3.5 text-purple-500 shrink-0 group-hover:translate-x-0.5 transition-transform" />
-                    </button>
-
-                    <button
-                      onClick={() => handleSend('номер 148 алгебра')}
-                      className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-500 hover:bg-purple-50/40 dark:hover:bg-purple-950/30 transition-all text-left text-slate-700 dark:text-slate-200 font-medium cursor-pointer shadow-2xs group"
-                    >
-                      <span className="flex items-center gap-2">
-                        <span>🔢</span>
-                        <span>Например: «номер 148 алгебра»</span>
-                      </span>
-                      <ArrowRight className="w-3.5 h-3.5 text-purple-500 shrink-0 group-hover:translate-x-0.5 transition-transform" />
-                    </button>
-                  </div>
-                </div>
-              </div>
             </div>
           ) : (
             /* Active Messages List */
@@ -551,17 +662,19 @@ export default function App() {
           )}
         </div>
 
-        {/* Input Bar */}
-        <ChatInput
-          onSend={handleSend}
-          onStop={handleStop}
-          streaming={streaming}
-          activeSubject={activeChat?.subject}
-          onOpenTextbooks={() => setTextbooksOpen(true)}
-        />
+        {/* Input Bar (When in active chat or pinned at bottom) */}
+        {activeChat.messages.length > 0 && (
+          <ChatInput
+            onSend={handleSend}
+            onStop={handleStop}
+            streaming={streaming}
+            activeSubject={activeChat?.subject}
+            onOpenTextbooks={() => setTextbooksOpen(true)}
+          />
+        )}
 
         {/* Mobile Bottom Navigation Dock (Native App Feel on Smartphones) */}
-        <div className="sm:hidden flex items-center justify-around py-2 px-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 z-20 shrink-0 select-none">
+        <div className="sm:hidden flex items-center justify-around py-2 px-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 z-20 shrink-0 select-none">
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
@@ -588,19 +701,19 @@ export default function App() {
           </button>
           <button
             type="button"
-            onClick={() => setBookmarksOpen(true)}
+            onClick={() => setReviewsOpen(true)}
             className="flex flex-col items-center gap-0.5 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 text-[10px] font-semibold transition-colors"
           >
             <span className="text-base">⭐</span>
-            <span>Закладки</span>
+            <span>Отзывы</span>
           </button>
           <button
             type="button"
-            onClick={() => setSettingsOpen(true)}
-            className="flex flex-col items-center gap-0.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 text-[10px] font-semibold transition-colors"
+            onClick={() => setBookmarksOpen(true)}
+            className="flex flex-col items-center gap-0.5 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 text-[10px] font-semibold transition-colors"
           >
-            <span className="text-base">⚙️</span>
-            <span>Опции</span>
+            <span className="text-base">📌</span>
+            <span>Закладки</span>
           </button>
         </div>
       </div>
@@ -652,6 +765,13 @@ export default function App() {
           handleSend(`Поясни этот сохраненный конспект или решение:\n${content}`);
           if (window.innerWidth < 1024) setSidebarOpen(false);
         }}
+      />
+
+      {/* Reviews Modal */}
+      <ReviewsModal
+        isOpen={reviewsOpen}
+        onClose={() => setReviewsOpen(false)}
+        user={user}
       />
     </div>
   );

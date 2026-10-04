@@ -12,7 +12,7 @@ export default function Header({
   modelId, onModel,
   onClear, onExport,
   darkMode, setDarkMode, onSettings,
-  onOpenCheatSheet, onOpenBookmarks, onOpenTextbooks
+  onOpenCheatSheet, onOpenBookmarks, onOpenTextbooks, onOpenReviews
 }) {
   const [modelOpen, setModelOpen] = useState(false);
   const [streakOpen, setStreakOpen] = useState(false);
@@ -187,6 +187,16 @@ export default function Header({
             </>
           )}
         </div>
+
+        {/* Отзывы Button */}
+        <button
+          onClick={onOpenReviews}
+          className="flex items-center gap-1 p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100/90 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-600 dark:hover:text-amber-300 text-slate-700 dark:text-slate-200 transition-all cursor-pointer text-xs font-semibold border border-slate-200/80 dark:border-slate-700/80 shadow-2xs active:scale-95"
+          title="Отзывы учеников"
+        >
+          <span className="text-amber-500">★</span>
+          <span className="hidden sm:inline">Отзывы</span>
+        </button>
 
         {/* Шпаргалка формул Button */}
         <button

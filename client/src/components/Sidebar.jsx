@@ -22,7 +22,7 @@ const SUBJECTS = [
 export default function Sidebar({
   open, setOpen,
   chats, activeChatId, onSelectChat, onNewChat, onDeleteChat,
-  onNewChatWithSubject, onOpenTextbooks, onOpenCheatSheet, onOpenBookmarks,
+  onNewChatWithSubject, onOpenTextbooks, onOpenCheatSheet, onOpenBookmarks, onOpenReviews,
   user, onLogout, onOpenLogin
 }) {
   const [search, setSearch] = useState('');
@@ -102,19 +102,19 @@ export default function Sidebar({
             <span>Новый диалог</span>
           </button>
 
-          {/* Tool shortcuts: Textbooks, Cheat Sheet, Bookmarks */}
-          <div className="grid grid-cols-3 gap-1.5 pt-0.5">
+          {/* Tool shortcuts: Textbooks, Cheat Sheet, Bookmarks, Reviews */}
+          <div className="grid grid-cols-4 gap-1 pt-0.5">
             {/* Textbooks */}
             <button
               onClick={() => {
                 if (onOpenTextbooks) onOpenTextbooks();
                 if (window.innerWidth < 1024) setOpen(false);
               }}
-              className="flex flex-col items-center justify-center p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 hover:border-amber-400 text-slate-700 dark:text-slate-200 text-[11px] font-semibold transition-all cursor-pointer shadow-2xs group"
+              className="flex flex-col items-center justify-center p-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 hover:border-amber-400 text-slate-700 dark:text-slate-200 text-[10px] font-semibold transition-all cursor-pointer shadow-2xs group"
               title="Учебники 7 класс"
             >
               <span className="text-base group-hover:scale-110 transition-transform">📚</span>
-              <span className="mt-0.5 truncate">Учебники</span>
+              <span className="mt-0.5 truncate">Книги</span>
             </button>
 
             {/* Cheat Sheet */}
@@ -123,7 +123,7 @@ export default function Sidebar({
                 if (onOpenCheatSheet) onOpenCheatSheet();
                 if (window.innerWidth < 1024) setOpen(false);
               }}
-              className="flex flex-col items-center justify-center p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 hover:border-indigo-400 text-slate-700 dark:text-slate-200 text-[11px] font-semibold transition-all cursor-pointer shadow-2xs group"
+              className="flex flex-col items-center justify-center p-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 hover:border-indigo-400 text-slate-700 dark:text-slate-200 text-[10px] font-semibold transition-all cursor-pointer shadow-2xs group"
               title="Шпаргалка формул"
             >
               <span className="text-base group-hover:scale-110 transition-transform">📐</span>
@@ -136,7 +136,7 @@ export default function Sidebar({
                 if (onOpenBookmarks) onOpenBookmarks();
                 if (window.innerWidth < 1024) setOpen(false);
               }}
-              className="flex flex-col items-center justify-center p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 hover:border-amber-400 text-slate-700 dark:text-slate-200 text-[11px] font-semibold transition-all cursor-pointer shadow-2xs group relative"
+              className="flex flex-col items-center justify-center p-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 hover:border-amber-400 text-slate-700 dark:text-slate-200 text-[10px] font-semibold transition-all cursor-pointer shadow-2xs group relative"
               title="Мои закладки"
             >
               <span className="text-base group-hover:scale-110 transition-transform">⭐</span>
@@ -144,6 +144,19 @@ export default function Sidebar({
               {bookmarkCount > 0 && (
                 <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-500" />
               )}
+            </button>
+
+            {/* Reviews */}
+            <button
+              onClick={() => {
+                if (onOpenReviews) onOpenReviews();
+                if (window.innerWidth < 1024) setOpen(false);
+              }}
+              className="flex flex-col items-center justify-center p-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 hover:border-amber-400 text-slate-700 dark:text-slate-200 text-[10px] font-semibold transition-all cursor-pointer shadow-2xs group"
+              title="Отзывы учеников"
+            >
+              <span className="text-base group-hover:scale-110 transition-transform">💬</span>
+              <span className="mt-0.5 truncate">Отзывы</span>
             </button>
           </div>
 
