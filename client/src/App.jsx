@@ -5,11 +5,13 @@ import MessageItem from './components/MessageItem.jsx';
 import ChatInput from './components/ChatInput.jsx';
 import SettingsModal from './components/SettingsModal.jsx';
 import TextbooksModal from './components/TextbooksModal.jsx';
+import CheatSheetModal from './components/CheatSheetModal.jsx';
+import BookmarksModal from './components/BookmarksModal.jsx';
 import { MODELS } from './constants/models.js';
 import { streamChat } from './services/chatStream.js';
 import AuthModal from './components/AuthModal.jsx';
 import { checkAndHandleYandexToken } from './services/yandexAuth.js';
-import { ArrowRight, Image as ImgIcon, Zap } from 'lucide-react';
+import { ArrowRight, Image as ImgIcon, Zap, Sparkles } from 'lucide-react';
 import { detectExerciseInQuery } from './constants/exerciseIndex.js';
 import { renderPdfPageToDataUrl } from './services/pdfRenderer.js';
 
@@ -44,6 +46,10 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   // Textbooks Library Modal State
   const [textbooksOpen, setTextbooksOpen] = useState(false);
+  // CheatSheet Formulas Modal State
+  const [cheatSheetOpen, setCheatSheetOpen] = useState(false);
+  // Bookmarks Modal State
+  const [bookmarksOpen, setBookmarksOpen] = useState(false);
 
   const [modelId, setModelId] = useState(() => {
     return localStorage.getItem(STORAGE_MODEL) || 'mistral/pixtral-12b-2409';
@@ -378,13 +384,15 @@ export default function App() {
         onDeleteChat={handleDeleteChat}
         onNewChatWithSubject={handleNewChatWithSubject}
         onOpenTextbooks={() => setTextbooksOpen(true)}
+        onOpenCheatSheet={() => setCheatSheetOpen(true)}
+        onOpenBookmarks={() => setBookmarksOpen(true)}
         user={user}
         onLogout={handleLogout}
         onOpenLogin={() => setAuthModalOpen(true)}
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full min-w-0 bg-white dark:bg-slate-900 transition-colors">
+      <div className="flex-1 flex flex-col h-full min-w-0 bg-white dark:bg-slate-900 transition-colors ambient-mesh">
         {/* Top Header */}
         <Header
           sidebarOpen={sidebarOpen}
@@ -396,6 +404,9 @@ export default function App() {
           darkMode={darkMode}
           setDarkMode={setDarkMode}
           onSettings={() => setSettingsOpen(true)}
+          onOpenCheatSheet={() => setCheatSheetOpen(true)}
+          onOpenBookmarks={() => setBookmarksOpen(true)}
+          onOpenTextbooks={() => setTextbooksOpen(true)}
         />
 
         {/* Chat / Messages Area */}
@@ -406,90 +417,119 @@ export default function App() {
         >
 
           {activeChat.messages.length === 0 ? (
-            /* ClassMate AI Empty State */
-            <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12 space-y-8 animate-msg-in">
-              {/* Main Title */}
-              <div className="space-y-1.5">
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
-                  <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center text-base font-bold shadow-xs">
-                    🎓
-                  </span>
-                  ClassMate AI
-                </h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xl">
-                  Умный помощник для школы, решения задач по фото, подготовки к контрольным и экзаменам.
-                </p>
+            /* ClassMate AI Empty State - Human & Interactive Design */
+            <div className="max-w-4xl mx-auto px-4 py-6 sm:py-10 space-y-6 sm:space-y-8 animate-msg-in">
+              {/* Main Title Banner */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-indigo-50/80 via-purple-50/60 to-pink-50/40 dark:from-slate-800/80 dark:via-indigo-950/40 dark:to-purple-950/30 border border-indigo-200/80 dark:border-indigo-800/60 shadow-xs">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-indigo-500/20 ring-2 ring-white/20">
+                      🎓
+                    </span>
+                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                      Твой персональный репетитор
+                    </h1>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-xl">
+                    Решай домашку по фото, учись по реальным учебникам 7 класса, изучай формулы и готовься к контрольным на «отлично».
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => setTextbooksOpen(true)}
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-95"
+                  >
+                    <span>📚</span>
+                    <span>Учебники</span>
+                  </button>
+                  <button
+                    onClick={() => setCheatSheetOpen(true)}
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-md shadow-indigo-500/20 cursor-pointer active:scale-95"
+                  >
+                    <span>📐</span>
+                    <span>Формулы</span>
+                  </button>
+                </div>
               </div>
 
-              {/* Two Main Cards */}
+              {/* Main Feature Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Study & Tasks Card */}
-                <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-all space-y-4">
+                <div className="p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-800/50 backdrop-blur-xs hover:border-indigo-300 dark:hover:border-indigo-600/60 transition-all space-y-3.5 shadow-2xs">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-lg">
+                    <div className="w-10 h-10 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-lg">
                       📚
                     </div>
                     <div>
-                      <h2 className="text-base font-semibold text-slate-900 dark:text-white">Домашка & Учёба</h2>
+                      <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Домашка & Учёба</h2>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Помощь с любыми школьными предметами
+                        Помощь с любыми предметами и правилами
                       </p>
                     </div>
                   </div>
 
-                  <div className="space-y-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 text-xs">
+                  <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-700/60 text-xs">
                     <button
                       onClick={() => handleSend('Помоги решить задачу и объясни решение пошагово: ')}
-                      className="w-full flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/30 transition-all text-left text-slate-700 dark:text-slate-200 font-medium cursor-pointer shadow-2xs"
+                      className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/30 transition-all text-left text-slate-700 dark:text-slate-200 font-medium cursor-pointer shadow-2xs group"
                     >
-                      <span>💡 Решить задачу с пошаговым объяснением</span>
-                      <ArrowRight className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                      <span className="flex items-center gap-2">
+                        <span>💡</span>
+                        <span>Решить задачу с пошаговым объяснением</span>
+                      </span>
+                      <ArrowRight className="w-3.5 h-3.5 text-indigo-500 shrink-0 group-hover:translate-x-0.5 transition-transform" />
                     </button>
 
                     <button
-                      onClick={() => handleSend('Напиши подробный план сочинения или доклада на тему: ')}
-                      className="w-full flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/30 transition-all text-left text-slate-700 dark:text-slate-200 font-medium cursor-pointer shadow-2xs"
+                      onClick={() => handleSend('Объясни мне подробно тему с формулами и примерами: ')}
+                      className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/30 transition-all text-left text-slate-700 dark:text-slate-200 font-medium cursor-pointer shadow-2xs group"
                     >
-                      <span>✍️ Написать сочинение или доклад</span>
-                      <ArrowRight className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                      <span className="flex items-center gap-2">
+                        <span>📖</span>
+                        <span>Разобрать непонятную школьную тему</span>
+                      </span>
+                      <ArrowRight className="w-3.5 h-3.5 text-indigo-500 shrink-0 group-hover:translate-x-0.5 transition-transform" />
                     </button>
                   </div>
                 </div>
 
                 {/* Photo HW Card (Vision) */}
-                <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-all space-y-4">
+                <div className="p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-800/50 backdrop-blur-xs hover:border-purple-300 dark:hover:border-purple-600/60 transition-all space-y-3.5 shadow-2xs">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold text-lg">
+                    <div className="w-10 h-10 rounded-2xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-lg">
                       📸
                     </div>
                     <div>
-                      <h2 className="text-base font-semibold text-slate-900 dark:text-white">Решение по фото (Vision)</h2>
+                      <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Решение по фото & Номеру</h2>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Сделай фото страницы из учебника или тетради
+                        Сделай фото или просто напиши номер задания
                       </p>
                     </div>
                   </div>
 
-                  <div className="space-y-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 text-xs">
-                    <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 flex items-start gap-2 shadow-2xs">
-                      <ImgIcon className="w-4 h-4 text-orange-500 mt-0.5 shrink-0" />
-                      <div>
-                        <span className="font-semibold text-slate-800 dark:text-slate-200">Прикрепи фото задания</span>
-                        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-                          Нажми на «+» внизу для камеры/галереи или нажми Ctrl+V
-                        </p>
-                      </div>
-                    </div>
+                  <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-700/60 text-xs">
+                    <button
+                      onClick={() => handleSend('упр 89')}
+                      className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-500 hover:bg-purple-50/40 dark:hover:bg-purple-950/30 transition-all text-left text-slate-700 dark:text-slate-200 font-medium cursor-pointer shadow-2xs group"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span>🇷🇺</span>
+                        <span>Например: «упр 89» (Русский язык)</span>
+                      </span>
+                      <ArrowRight className="w-3.5 h-3.5 text-purple-500 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                    </button>
 
-                    <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 flex items-start gap-2 shadow-2xs">
-                      <Zap className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
-                      <div>
-                        <span className="font-semibold text-slate-800 dark:text-slate-200">Без VPN в РФ</span>
-                        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-                          Работает в школьной сети и с мобильного интернета
-                        </p>
-                      </div>
-                    </div>
+                    <button
+                      onClick={() => handleSend('номер 148 алгебра')}
+                      className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-500 hover:bg-purple-50/40 dark:hover:bg-purple-950/30 transition-all text-left text-slate-700 dark:text-slate-200 font-medium cursor-pointer shadow-2xs group"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span>🔢</span>
+                        <span>Например: «номер 148 алгебра»</span>
+                      </span>
+                      <ArrowRight className="w-3.5 h-3.5 text-purple-500 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -503,6 +543,7 @@ export default function App() {
                   message={msg}
                   isLast={i === activeChat.messages.length - 1}
                   streaming={streaming}
+                  onFollowUp={(followUpText) => handleSend(followUpText)}
                 />
               ))}
               <div ref={bottomRef} />
@@ -518,6 +559,50 @@ export default function App() {
           activeSubject={activeChat?.subject}
           onOpenTextbooks={() => setTextbooksOpen(true)}
         />
+
+        {/* Mobile Bottom Navigation Dock (Native App Feel on Smartphones) */}
+        <div className="sm:hidden flex items-center justify-around py-2 px-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 z-20 shrink-0 select-none">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="flex flex-col items-center gap-0.5 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-[10px] font-semibold transition-colors"
+          >
+            <span className="text-base">💬</span>
+            <span>Диалоги</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTextbooksOpen(true)}
+            className="flex flex-col items-center gap-0.5 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 text-[10px] font-semibold transition-colors"
+          >
+            <span className="text-base">📚</span>
+            <span>Учебники</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setCheatSheetOpen(true)}
+            className="flex flex-col items-center gap-0.5 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-[10px] font-semibold transition-colors"
+          >
+            <span className="text-base">📐</span>
+            <span>Формулы</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setBookmarksOpen(true)}
+            className="flex flex-col items-center gap-0.5 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 text-[10px] font-semibold transition-colors"
+          >
+            <span className="text-base">⭐</span>
+            <span>Закладки</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            className="flex flex-col items-center gap-0.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 text-[10px] font-semibold transition-colors"
+          >
+            <span className="text-base">⚙️</span>
+            <span>Опции</span>
+          </button>
+        </div>
       </div>
 
       {/* Yandex ID Authentication Modal */}
@@ -545,6 +630,26 @@ export default function App() {
         }}
         onSendBookPage={(prompt, imgs) => {
           handleSend(prompt, imgs);
+          if (window.innerWidth < 1024) setSidebarOpen(false);
+        }}
+      />
+
+      {/* CheatSheet Formulas Modal */}
+      <CheatSheetModal
+        isOpen={cheatSheetOpen}
+        onClose={() => setCheatSheetOpen(false)}
+        onInsertToChat={(prompt) => {
+          handleSend(prompt);
+          if (window.innerWidth < 1024) setSidebarOpen(false);
+        }}
+      />
+
+      {/* Bookmarks Modal */}
+      <BookmarksModal
+        isOpen={bookmarksOpen}
+        onClose={() => setBookmarksOpen(false)}
+        onOpenInChat={(content) => {
+          handleSend(`Поясни этот сохраненный конспект или решение:\n${content}`);
           if (window.innerWidth < 1024) setSidebarOpen(false);
         }}
       />
