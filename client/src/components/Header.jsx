@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Menu, ChevronDown, Check, Trash2, Download,
   Sun, Moon, Settings as SettingsIcon, Sparkles,
-  Flame, BookOpen, Star, HelpCircle, X
+  Flame, BookOpen, Star, HelpCircle, X, Mic, Plus
 } from 'lucide-react';
 import { MODELS } from '../constants/models.js';
 import { getStudyStreak, getDailyTasksCount, getBookmarks } from '../services/studyTracker.js';
@@ -13,7 +13,8 @@ export default function Header({
   modelId, onModel,
   onClear, onExport,
   darkMode, setDarkMode, onSettings,
-  onOpenCheatSheet, onOpenBookmarks, onOpenTextbooks, onOpenReviews
+  onOpenCheatSheet, onOpenBookmarks, onOpenTextbooks, onOpenReviews,
+  onOpenVoiceChat, onNewChat
 }) {
   const [modelOpen, setModelOpen] = useState(false);
   const [streakOpen, setStreakOpen] = useState(false);
@@ -228,6 +229,19 @@ export default function Header({
               {bookmarkCount}
             </span>
           )}
+        </button>
+
+        {/* Voice Mode Button (Claude / ChatGPT Style) */}
+        <button
+          onClick={() => {
+            triggerHaptic('medium');
+            onOpenVoiceChat?.();
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-xs shadow-md shadow-indigo-600/30 transition-all cursor-pointer active:scale-95 native-touch"
+          title="Открыть голосовой чат (диалог)"
+        >
+          <Mic className="w-3.5 h-3.5 animate-pulse text-indigo-200" />
+          <span>Голос</span>
         </button>
 
         {/* Dark/Light mode toggle */}

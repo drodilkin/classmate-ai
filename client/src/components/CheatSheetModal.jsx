@@ -9,15 +9,15 @@ const CHEAT_DATA = {
   physics: {
     key: 'physics',
     name: 'Физика',
-    grade: '7 класс',
+    grade: 'Формулы',
     icon: '⚛️',
     color: 'from-amber-500 to-orange-600',
     accentColor: 'amber',
     sections: [
       {
         id: 'phys_mechanics',
-        title: 'Механика и движение (7 класс)',
-        description: 'Базовые формулы кинематики и динамики 7 класса',
+        title: 'Механика и движение',
+        description: 'Базовые формулы кинематики и динамики',
         items: [
           {
             name: 'Скорость равномерного движения',
@@ -101,7 +101,7 @@ export default function CheatSheetModal({ isOpen, onClose, onInsertToChat }) {
               <h2 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <span className="truncate">Шпаргалки и формулы</span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-semibold shrink-0">
-                  7 класс
+                  База знаний
                 </span>
               </h2>
               <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
@@ -292,7 +292,7 @@ export default function CheatSheetModal({ isOpen, onClose, onInsertToChat }) {
             Нажмите <strong>«В чат»</strong>, чтобы ИИ решил номер или объяснил правило
           </span>
           <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold">
-            ФГОС 7 класс
+            ClassMate AI
           </span>
         </div>
       </div>

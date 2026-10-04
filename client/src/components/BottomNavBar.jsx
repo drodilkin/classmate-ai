@@ -21,7 +21,7 @@ export default function BottomNavBar({
       id: 'textbooks',
       label: 'Учебники',
       icon: BookOpen,
-      badge: '7 кл',
+      badge: 'PDF',
       badgeColor: 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
     },
     {

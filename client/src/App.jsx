@@ -9,12 +9,13 @@ import CheatSheetModal from './components/CheatSheetModal.jsx';
 import BookmarksModal from './components/BookmarksModal.jsx';
 import ReviewsModal from './components/ReviewsModal.jsx';
 import BottomNavBar from './components/BottomNavBar.jsx';
+import VoiceChatModal from './components/VoiceChatModal.jsx';
 import { MODELS } from './constants/models.js';
 import { streamChat } from './services/chatStream.js';
 import AuthModal from './components/AuthModal.jsx';
 import WelcomeModal from './components/WelcomeModal.jsx';
 import { checkAndHandleYandexToken } from './services/yandexAuth.js';
-import { ArrowRight, Image as ImgIcon, Zap, Sparkles, Plus, Camera, Send } from 'lucide-react';
+import { ArrowRight, Image as ImgIcon, Zap, Sparkles, Plus, Camera, Send, Mic } from 'lucide-react';
 import { detectExerciseInQuery } from './constants/exerciseIndex.js';
 import { renderPdfPageToDataUrl } from './services/pdfRenderer.js';
 import { Capacitor } from '@capacitor/core';
@@ -59,6 +60,8 @@ export default function App() {
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
   // Reviews Modal State
   const [reviewsOpen, setReviewsOpen] = useState(false);
+  // Voice Chat Modal State (Full-screen interactive voice session)
+  const [voiceChatOpen, setVoiceChatOpen] = useState(false);
   // Mobile Bottom Navigation active tab ('chat', 'textbooks', 'formulas', 'reviews', 'profile')
   const [mobileTab, setMobileTab] = useState('chat');
 
@@ -367,19 +370,17 @@ export default function App() {
     const ctrl = new AbortController();
     abortRef.current = ctrl;
 
-    // Prepare messages with system prompt & textbook context
-    const customPrompt = localStorage.getItem(STORAGE_PROMPT);
-    const textbookPrompt = `Ты — ClassMate AI, лучший школьный помощник и репетитор для 7 класса (ФГОС).
-В приложение встроены официальные школьные учебники:
-1) АЛГЕБРА 7 класс (Ю.Н. Макарычев, Н.Г. Миндюк, под ред. С.А. Теляковского, Просвещение 2023): выражения, тождества, линейные уравнения с одной переменной, функции y=kx+b, степень, одночлены, многочлены, формулы сокращенного умножения, системы линейных уравнений.
-2) ГЕОМЕТРИЯ 7-9 классы (Л.С. Атанасян, В.Ф. Бутузов и др.): отрезки, лучи, углы, признаки равенства треугольников, медианы/биссектрисы/высоты, параллельные прямые, сумма углов треугольника (180°), прямоугольные треугольники.
-3) РУССКИЙ ЯЗЫК 7 класс Часть 1 (М.Т. Баранов, Т.А. Ладыженская, Л.А. Тростенцова, Просвещение 2023): причастия (суффиксы, Н и НН, НЕ с причастиями, причастный оборот), деепричастия (суффиксы, деепричастный оборот), наречия (степени сравнения, НЕ и НИ, Н и НН, дефис, О/А на конце).
+    const textbookPrompt = `Ты — ClassMate AI, универсальный интеллектуальный ИИ-ассистент для любых задач (учёба, работа, решение задач, программирование, анализ текстов и фото).
+В систему также встроены официальные справочные материалы и учебники:
+1) АЛГЕБРА (Ю.Н. Макарычев, Н.Г. Миндюк, под ред. С.А. Теляковского): выражения, тождества, линейные уравнения с одной переменной, функции y=kx+b, степень, одночлены, многочлены, формулы сокращенного умножения, системы линейных уравнений.
+2) ГЕОМЕТРИЯ (Л.С. Атанасян, В.Ф. Бутузов и др.): отрезки, лучи, углы, признаки равенства треугольников, медианы/биссектрисы/высоты, параллельные прямые, сумма углов треугольника (180°), прямоугольные треугольники.
+3) РУССКИЙ ЯЗЫК (М.Т. Баранов, Т.А. Ладыженская, Л.А. Тростенцова): причастия (суффиксы, Н и НН, НЕ с причастиями, причастный оборот), деепричастия (суффиксы, деепричастный оборот), наречия (степени сравнения, НЕ и НИ, Н и НН, дефис, О/А на конце).
 
-ПРАВИЛА РЕШЕНИЯ ЗАДАНИЙ:
-- Если к сообщению прикреплено фото страницы учебника: внимательно найди на фото нужный номер упражнения/задачи.
-- Прочитай точный текст задания со страницы и реши все пункты (а, б, в, г...) по порядку.
-- Все формулы пиши в LaTeX ($x^2$, \\frac{a}{b}, \\sqrt{x}, \\angle ABC, ^\\circ).
-- Оформляй решение аккуратно: "Дано", "Решение", "Ответ". Объясняй каждый шаг, как в образцовой школьной тетради.`;
+ПРАВИЛА ОТВЕТОВ:
+- Если к сообщению прикреплено фото или запрос по учебнику: внимательно найди нужный номер или текст задачи.
+- Решай все пункты (а, б, в, г...) аккуратно и по порядку.
+- Все математические формулы пиши в LaTeX ($x^2$, \\frac{a}{b}, \\sqrt{x}, \\angle ABC, ^\\circ).
+- Отвечай понятно, структурированно, без лишней воды. При необходимости объясняй логику решения.`;
 
     const fullSystemPrompt = customPrompt && customPrompt.trim()
       ? `${customPrompt.trim()}\n\n[База знаний учебников:]\n${textbookPrompt}`
@@ -498,6 +499,7 @@ export default function App() {
           onOpenBookmarks={() => setBookmarksOpen(true)}
           onOpenTextbooks={() => setTextbooksOpen(true)}
           onOpenReviews={() => setReviewsOpen(true)}
+          onOpenVoiceChat={() => setVoiceChatOpen(true)}
         />
 
         {/* Chat / Messages Area */}
@@ -514,24 +516,24 @@ export default function App() {
               {/* Branding (Arena Style: Logo Badge + Premium Typography) */}
               <div className="text-center space-y-2.5">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/70 text-slate-700 dark:text-slate-300 shadow-2xs mb-1">
-                  <span className="text-sm">🎓</span>
+                  <span className="text-sm">⚡</span>
                   <span className="text-xs font-bold tracking-tight text-slate-900 dark:text-slate-100 font-sans">
                     ClassMate AI
                   </span>
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-                    7 класс ФГОС
+                    Универсальный ИИ
                   </span>
                 </div>
                 
                 <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.15]">
                   Твой персональный{' '}
                   <span className="font-serif italic font-normal text-amber-950 dark:text-amber-950 px-3.5 py-0.5 rounded-xl bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-300 shadow-md shadow-amber-500/25 inline-block transform -rotate-1 select-none">
-                    репетитор
+                    ИИ-интеллект
                   </span>
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-lg mx-auto leading-relaxed">
-                  Поможет решить домашку по фото, найдет упражнение в учебниках 7 класса и объяснит всё по шагам простыми словами
+                  Решает задачи, помогает в учёбе и работе, пишет код, анализирует фото и объясняет любые сложные вещи простыми словами
                 </p>
               </div>
 
@@ -550,7 +552,7 @@ export default function App() {
                     }
                   }}
                   rows={2}
-                  placeholder="Спроси что угодно, сфотографируй задачу или напиши номер (например: упр 89)..."
+                  placeholder="Спроси что угодно, сфотографируй задачу или напиши вопрос..."
                   className="w-full bg-transparent border-none outline-none resize-none text-xs sm:text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 leading-relaxed font-sans"
                 />
 
@@ -584,10 +586,21 @@ export default function App() {
                       <span className="hidden sm:inline">Фото</span>
                     </button>
 
+                    {/* Dedicated Voice Chat Button */}
+                    <button
+                      type="button"
+                      onClick={() => setVoiceChatOpen(true)}
+                      className="p-1.5 text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 bg-indigo-50/80 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold border border-indigo-200/50 dark:border-indigo-800/40"
+                      title="Открыть голосовой чат"
+                    >
+                      <Mic className="w-4 h-4 text-indigo-500 animate-pulse" />
+                      <span>Голос</span>
+                    </button>
+
                     {/* Mode pill */}
                     <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-[11px] font-semibold text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
                       <Sparkles className="w-3 h-3 text-indigo-500" />
-                      <span>7 класс</span>
+                      <span>Универсальный</span>
                     </div>
 
                     <button
@@ -628,7 +641,7 @@ export default function App() {
                   {/* 1. Geometry */}
                   <button
                     type="button"
-                    onClick={() => handleSend('Помоги решить задачу по геометрии (Атанасян 7-9 класс): ')}
+                    onClick={() => handleSend('Помоги решить задачу по геометрии: ')}
                     className="p-3.5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 hover:border-emerald-500/60 dark:hover:border-emerald-500/60 hover:shadow-md hover:-translate-y-0.5 transition-all text-left space-y-1.5 cursor-pointer group"
                   >
                     <div className="flex items-center justify-between">
@@ -637,13 +650,13 @@ export default function App() {
                           📐
                         </span>
                         <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                          Геометрия 7 класс
+                          Геометрия & Теоремы
                         </span>
                       </div>
                       <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
                     </div>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug pl-9">
-                      Атанасян 7-9 класс, признаки треугольников и теоремы
+                      Теоремы, доказательства, треугольники и углы
                     </p>
                   </button>
 
@@ -659,20 +672,20 @@ export default function App() {
                           🔢
                         </span>
                         <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                          Алгебра: номер 148
+                          Алгебра & Вычисления
                         </span>
                       </div>
                       <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all" />
                     </div>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug pl-9">
-                      Макарычев 7 класс, уравнения и ФСУ с пошаговым разбором
+                      Уравнения, функции, степени и формулы
                     </p>
                   </button>
 
                   {/* 3. Russian */}
                   <button
                     type="button"
-                    onClick={() => handleSend('упр 89')}
+                    onClick={() => handleSend('упр 89 русский язык')}
                     className="p-3.5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 hover:border-rose-500/60 dark:hover:border-rose-500/60 hover:shadow-md hover:-translate-y-0.5 transition-all text-left space-y-1.5 cursor-pointer group"
                   >
                     <div className="flex items-center justify-between">
@@ -681,13 +694,13 @@ export default function App() {
                           🇷🇺
                         </span>
                         <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
-                          Русский: упр 89
+                          Русский язык & Тексты
                         </span>
                       </div>
                       <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-rose-500 group-hover:translate-x-0.5 transition-all" />
                     </div>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug pl-9">
-                      Баранов, причастия, деепричастия и орфография
+                      Грамотность, разбор слов, орфография и пунктуация
                     </p>
                   </button>
 
@@ -703,13 +716,13 @@ export default function App() {
                           📚
                         </span>
                         <span className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                          Учебники 7 класс
+                          Учебники
                         </span>
                       </div>
                       <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-amber-500 group-hover:translate-x-0.5 transition-all" />
                     </div>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug pl-9">
-                      Открыть онлайн PDF учебников и читать страницы
+                      Онлайн просмотр школьных PDF учебников
                     </p>
                   </button>
 
@@ -791,6 +804,7 @@ export default function App() {
                 setTextbooksOpen(true);
                 setMobileTab('textbooks');
               }}
+              onOpenVoiceChat={() => setVoiceChatOpen(true)}
             />
           </div>
         )}
@@ -888,6 +902,13 @@ export default function App() {
           setMobileTab('chat');
         }}
         user={user}
+      />
+
+      {/* Full-Screen Interactive AI Voice Chat Modal (Claude & ChatGPT style) */}
+      <VoiceChatModal
+        isOpen={voiceChatOpen}
+        onClose={() => setVoiceChatOpen(false)}
+        modelId={modelId}
       />
     </div>
   );

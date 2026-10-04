@@ -86,7 +86,7 @@ export default function SettingsModal({
                       <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
                         <span>{user.name}</span>
                         <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-200/80 dark:bg-indigo-900/60 text-indigo-900 dark:text-indigo-200 font-semibold">
-                          7 класс
+                          Пользователь
                         </span>
                       </div>
                       <div className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -188,13 +188,13 @@ export default function SettingsModal({
             {/* System Prompt */}
             <div className="space-y-1.5">
               <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
-                Инструкция для ИИ-репетитора
+                Инструкция для ИИ
               </label>
               <textarea
                 rows={3}
                 value={systemPrompt}
                 onChange={handleSystemPromptChange}
-                placeholder="Например: Объясняй пошагово, используй формулы ФСУ для 7 класса..."
+                placeholder="Например: Отвечай максимально понятно, оформляй формулы в LaTeX, приводи примеры..."
                 className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs p-3 outline-none focus:border-indigo-400 transition-all"
               />
             </div>

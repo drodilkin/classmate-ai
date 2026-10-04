@@ -97,7 +97,7 @@ export default function Sidebar({
           >
             <span className="flex items-center gap-2.5">
               <BookOpen className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-              <span>Учебники (7 класс)</span>
+              <span>Учебники</span>
             </span>
             <span className="text-[10px] text-slate-400">PDF</span>
           </button>
@@ -249,7 +249,7 @@ export default function Sidebar({
           {/* Subtle footer label */}
           <div className="pt-2 px-1 text-[10px] text-slate-400 flex items-center justify-between">
             <span>ClassMate AI</span>
-            <span>Школьный репетитор</span>
+            <span>Универсальный ИИ</span>
           </div>
         </div>
       </aside>

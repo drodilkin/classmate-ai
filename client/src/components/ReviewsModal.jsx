@@ -20,7 +20,7 @@ export default function ReviewsModal({ isOpen, onClose, user }) {
   
   // New review form state
   const [author, setAuthor] = useState('');
-  const [role, setRole] = useState('Ученик 7 класса');
+  const [role, setRole] = useState('Пользователь');
   const [rating, setRating] = useState(5);
   const [subject, setSubject] = useState('Общее');
   const [text, setText] = useState('');

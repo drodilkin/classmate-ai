@@ -230,7 +230,7 @@ export default function MessageItem({ message, isLast, streaming, onFollowUp }) 
                 ClassMate AI
               </span>
               <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-semibold border border-indigo-200/50 dark:border-indigo-800/40">
-                Репетитор 7 класс
+                ИИ-Ассистент
               </span>
               <span className="hidden sm:inline-flex items-center gap-0.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
                 ✓ Проверено
@@ -377,7 +377,7 @@ export default function MessageItem({ message, isLast, streaming, onFollowUp }) 
                 {onFollowUp && (
                   <button
                     type="button"
-                    onClick={() => onFollowUp('Объясни это решение проще и понятнее, простыми словами для 7 класса')}
+                    onClick={() => onFollowUp('Объясни это решение проще и понятнее, максимально простыми и ясными словами')}
                     className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-medium transition-all cursor-pointer shadow-2xs active:scale-95"
                   >
                     <Sparkles className="w-3 h-3 text-indigo-500" />

@@ -136,9 +136,9 @@ export default function TextbooksModal({ isOpen, onClose, onAskBookTopic, onSend
               </div>
               <div className="min-w-0">
                 <h2 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-2 truncate">
-                  <span>Учебники 7 класс</span>
+                  <span>Учебники</span>
                   <span className="text-[10px] sm:text-xs px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-300 dark:border-emerald-800 shrink-0">
-                    ФГОС
+                    PDF
                   </span>
                 </h2>
                 <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">

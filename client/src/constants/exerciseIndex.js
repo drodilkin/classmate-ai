@@ -13,7 +13,7 @@ export const SUBJECT_INFO = {
     label: 'Русский язык',
     shortLabel: 'Русский',
     icon: '🇷🇺',
-    fullName: 'Русский язык 7 класс (Баранов)',
+    fullName: 'Русский язык (Баранов)',
     bookFile: 'books/russkij_7_baranov_ch1.pdf'
   },
   algebra_7: {
@@ -21,7 +21,7 @@ export const SUBJECT_INFO = {
     label: 'Алгебра',
     shortLabel: 'Алгебра',
     icon: '🔢',
-    fullName: 'Алгебра 7 класс (Макарычев)',
+    fullName: 'Алгебра (Макарычев)',
     bookFile: 'books/algebra_7_makarychev.pdf'
   },
   geometry_7_9: {
@@ -29,7 +29,7 @@ export const SUBJECT_INFO = {
     label: 'Геометрия',
     shortLabel: 'Геометрия',
     icon: '📐',
-    fullName: 'Геометрия 7-9 класс (Атанасян)',
+    fullName: 'Геометрия (Атанасян)',
     bookFile: 'books/geometrija_7_9_atanasyan.pdf'
   }
 };

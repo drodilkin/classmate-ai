@@ -31,7 +31,7 @@ const FALLBACK_REVIEWS = [
   {
     id: 'rev_real_2',
     author: 'Алина С.',
-    role: 'Ученица 7 класса',
+    role: 'Пользователь',
     avatarLetter: 'А',
     color: 'from-pink-500 to-rose-600',
     rating: 5,
@@ -196,7 +196,7 @@ export function getReviews() {
  */
 export function addReview({
   author,
-  role = 'Ученик 7 класса',
+  role = 'Пользователь',
   rating = 5,
   subject = 'Общее',
   text,
@@ -253,7 +253,7 @@ export function addReview({
   const newRev = {
     id: 'rev_' + Date.now(),
     author: authorName,
-    role: role || (isAuthenticated ? 'Авторизованный ученик' : 'Ученик 7 класса'),
+    role: role || (isAuthenticated ? 'Авторизованный пользователь' : 'Пользователь'),
     avatarLetter: authorName[0].toUpperCase(),
     avatarUrl: user?.avatar || null,
     color: chosenColor,

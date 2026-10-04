@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowUp, Plus, Camera, Image as GalleryIcon, X, StopCircle, Zap, ListOrdered, CheckCircle2, BookOpen, Sparkles } from 'lucide-react';
+import { ArrowUp, Plus, Camera, Image as GalleryIcon, X, StopCircle, Zap, ListOrdered, CheckCircle2, BookOpen, Sparkles, Mic } from 'lucide-react';
 import { detectExerciseInQuery } from '../constants/exerciseIndex.js';
 import { renderPdfPageToDataUrl } from '../services/pdfRenderer.js';
 import { triggerHaptic } from '../utils/haptics.js';
 
 const QUICK_MATH = ['√', 'x²', 'π', '±', '≤', '≥', '÷', '≈', '°'];
 
-export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, activeSubject }) {
+export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, activeSubject, onOpenVoiceChat }) {
   const [text, setText] = useState('');
   const [images, setImages] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -373,8 +373,8 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
                     <div>
                       <div className="font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
                         <span>Страница из учебника</span>
-                        <span className="text-[9px] px-1 py-0.2 rounded bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100 font-bold">
-                          7 кл
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-bold">
+                          PDF
                         </span>
                       </div>
                       <div className="text-[10px] text-slate-400 dark:text-slate-500">Алгебра, геометрия, русский</div>
@@ -397,7 +397,7 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
             className="w-full bg-transparent resize-none outline-none text-slate-800 dark:text-slate-100 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 py-1.5 px-1 max-h-44 leading-relaxed"
           />
 
-          {/* Action Button: Send or Stop */}
+          {/* Action Button: Voice Mode / Send / Stop */}
           {streaming ? (
             <button
               type="button"
@@ -407,17 +407,20 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
             >
               <StopCircle className="w-5 h-5 text-orange-400" />
             </button>
+          ) : !text.trim() && images.length === 0 ? (
+            <button
+              type="button"
+              onClick={onOpenVoiceChat}
+              className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60 transition-all cursor-pointer shrink-0 hover:scale-105 active:scale-95 flex items-center justify-center group shadow-xs"
+              title="Открыть голосовой чат"
+            >
+              <Mic className="w-5 h-5 text-indigo-600 dark:text-indigo-400 transition-transform group-hover:scale-110" />
+            </button>
           ) : (
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={!text.trim() && images.length === 0}
-              className={`
-                p-2 rounded-xl transition-all cursor-pointer shrink-0 shadow-2xs
-                ${(!text.trim() && images.length === 0)
-                  ? 'bg-slate-200 dark:bg-slate-700/60 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white active:scale-95 shadow-sm shadow-indigo-500/20'}
-              `}
+              className="p-2.5 rounded-xl transition-all cursor-pointer shrink-0 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white active:scale-95 shadow-sm shadow-indigo-500/20"
               title="Отправить (Enter)"
             >
               <ArrowUp className="w-5 h-5" />
