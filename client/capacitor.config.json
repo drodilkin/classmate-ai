@@ -4,9 +4,9 @@
   "webDir": "dist",
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 400,
+      "launchShowDuration": 350,
       "launchAutoHide": true,
-      "backgroundColor": "#0f172a",
+      "backgroundColor": "#090d16",
       "androidSplashResourceName": "splash",
       "androidScaleType": "CENTER_CROP",
       "showSpinner": false,
@@ -15,12 +15,12 @@
     },
     "StatusBar": {
       "style": "DARK",
-      "backgroundColor": "#0f172a"
+      "backgroundColor": "#090d16"
     }
   },
   "android": {
     "allowMixedContent": true,
     "webContentsDebuggingEnabled": false,
-    "backgroundColor": "#0f172a"
+    "backgroundColor": "#090d16"
   }
 }

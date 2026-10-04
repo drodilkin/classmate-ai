@@ -4,7 +4,8 @@
 @layer base {
   *, ::before, ::after {
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none !important;
   }
   
   html, body {
@@ -21,21 +22,48 @@
     text-rendering: optimizeLegibility;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-overflow-scrolling: touch;
-    touch-action: manipulation;
-    overscroll-behavior-y: none;
-    overscroll-behavior-x: none;
-    user-select: none;
+    touch-action: pan-y manipulation;
+    overscroll-behavior: none !important;
+    overscroll-behavior-y: none !important;
+    overscroll-behavior-x: none !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
   }
   
   /* Inputs and selectable text allow normal selection */
   input, textarea, [contenteditable="true"], .prose-mistral, .selectable-text {
     user-select: text !important;
+    -webkit-user-select: text !important;
+  }
+
+  /* Prevent browser text callout and magnifying glass on buttons */
+  button, a, svg, img {
+    -webkit-touch-callout: none !important;
+    -webkit-user-drag: none !important;
+    user-select: none !important;
   }
 
   html.dark {
     background-color: #090d16;
     color-scheme: dark;
   }
+}
+
+/* 100% Native App feel classes */
+.native-surface {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.native-touch {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.native-touch:active {
+  transform: scale(0.975);
+  transition: transform 0.08s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .font-serif {

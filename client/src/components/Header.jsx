@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { MODELS } from '../constants/models.js';
 import { getStudyStreak, getDailyTasksCount, getBookmarks } from '../services/studyTracker.js';
+import { triggerHaptic } from '../utils/haptics.js';
 
 export default function Header({
   sidebarOpen, setSidebarOpen,
@@ -44,14 +45,17 @@ export default function Header({
   const progressPercent = Math.min(100, Math.round((dailyCount / dailyGoal) * 100));
 
   return (
-    <header className="pt-[env(safe-area-inset-top)] h-[calc(3.5rem+env(safe-area-inset-top))] border-b border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-2.5 sm:px-4 flex items-center justify-between z-30 shrink-0 transition-all select-none">
+    <header className="pt-[env(safe-area-inset-top)] h-[calc(3.5rem+env(safe-area-inset-top))] border-b border-slate-200/90 dark:border-slate-800/80 bg-white/95 dark:bg-[#090d16]/95 backdrop-blur-xl px-2.5 sm:px-4 flex items-center justify-between z-30 shrink-0 transition-all select-none native-surface">
       
       {/* Left section: Toggle & Model Selector */}
       <div className="flex items-center gap-1.5 sm:gap-2">
         {!sidebarOpen && (
           <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl transition-all cursor-pointer active:scale-95"
+            onClick={() => {
+              triggerHaptic('light');
+              setSidebarOpen(true);
+            }}
+            className="p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl transition-all cursor-pointer active:scale-95 native-touch"
             title="Открыть меню"
           >
             <Menu className="w-5 h-5" />
@@ -61,8 +65,11 @@ export default function Header({
         {/* Model dropdown */}
         <div className="relative">
           <button
-            onClick={() => setModelOpen(!modelOpen)}
-            className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/90 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700/80 transition-all text-xs font-medium text-slate-800 dark:text-slate-100 cursor-pointer shadow-2xs active:scale-98"
+            onClick={() => {
+              triggerHaptic('light');
+              setModelOpen(!modelOpen);
+            }}
+            className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/90 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700/80 transition-all text-xs font-medium text-slate-800 dark:text-slate-100 cursor-pointer shadow-2xs active:scale-98 native-touch"
           >
             <span className="w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20 animate-pulse" />
             <span className="font-bold">{activeModel.name}</span>

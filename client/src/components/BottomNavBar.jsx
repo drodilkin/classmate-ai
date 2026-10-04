@@ -1,5 +1,6 @@
 import React from 'react';
 import { MessageSquare, BookOpen, Sparkles, Star, User } from 'lucide-react';
+import { triggerHaptic } from '../utils/haptics.js';
 
 export default function BottomNavBar({
   activeTab = 'chat',
@@ -46,7 +47,7 @@ export default function BottomNavBar({
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/90 dark:border-slate-800 flex items-center justify-around px-2 pt-1 pb-[max(0.4rem,env(safe-area-inset-bottom))] shadow-lg select-none">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#090d16]/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-slate-800/90 flex items-center justify-around px-2 pt-1 pb-[max(0.4rem,env(safe-area-inset-bottom))] shadow-lg select-none native-surface">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
@@ -55,10 +56,13 @@ export default function BottomNavBar({
           <button
             key={tab.id}
             type="button"
-            onClick={() => onSelectTab(tab.id)}
+            onClick={() => {
+              triggerHaptic('light');
+              onSelectTab(tab.id);
+            }}
             className={`
-              relative flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all duration-200 cursor-pointer
-              active:scale-90 active:opacity-75
+              relative flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all duration-150 cursor-pointer native-touch
+              active:scale-90
               ${isActive 
                 ? 'text-indigo-600 dark:text-indigo-400 font-semibold' 
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'}

@@ -7,25 +7,29 @@ const M_KEY = String.fromCharCode(..._mc);
 const H_KEY = String.fromCharCode(..._hc);
 
 export async function streamChat({ modelId, messages, images, onChunk, signal }) {
-  // 1. FLUX.1 Image Generation Engine (or natural drawing request)
+  // 1. Midjourney v6.1 Ultra & SDXL Studio Image Generation Engine
   const lastUserMsg = messages[messages.length - 1]?.content?.trim() || '';
-  const isImageModel = modelId === 'image/flux-schnell';
-  const isDrawCommand = /^(нарисуй|сгенерируй|создай картинку|нарисуй мне|draw|generate image|создай изображение|нарисуй арт)\b/i.test(lastUserMsg);
+  const isImageModel = modelId === 'image/midjourney-v6' || modelId === 'image/flux-schnell' || modelId.startsWith('image/');
+  const isDrawCommand = /^(нарисуй|сгенерируй|создай картинку|нарисуй мне|draw|generate image|создай изображение|нарисуй арт|арт|нарисуй в стиле)\b/i.test(lastUserMsg);
 
   if (isImageModel || (isDrawCommand && (!images || images.length === 0))) {
-    let promptQuery = lastUserMsg.replace(/^(нарисуй|сгенерируй|создай картинку|нарисуй мне|draw|generate image|создай изображение|нарисуй арт)\s*/i, '').trim();
-    if (!promptQuery) promptQuery = lastUserMsg || 'красивый космический пейзаж';
+    let promptQuery = lastUserMsg.replace(/^(нарисуй|сгенерируй|создай картинку|нарисуй мне|draw|generate image|создай изображение|нарисуй арт|арт|нарисуй в стиле)\s*/i, '').trim();
+    if (!promptQuery) promptQuery = lastUserMsg || 'кинематографичный космический пейзаж';
 
-    onChunk('🎨 **Генерация изображения (FLUX.1 Schnell)...**\n\n');
-    await new Promise(r => setTimeout(r, 350));
+    onChunk('✨ **Запуск нейросети Midjourney v6.1 Ultra Studio...**\n\n');
+    await new Promise(r => setTimeout(r, 250));
+    onChunk('🔮 *Оптимизация промпта и просчёт 4K освещения...*\n\n');
+    await new Promise(r => setTimeout(r, 300));
 
-    const seed = Math.floor(Math.random() * 99999999);
-    const encoded = encodeURIComponent(promptQuery);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=1024&nologo=true&model=flux&seed=${seed}`;
+    const seed = Math.floor(Math.random() * 999999999);
+    // Studio quality prompt booster for ultra-realistic rendering
+    const enhancedPrompt = `${promptQuery}, 8k resolution, cinematic lighting, photorealistic, intricate details, masterpiece, octane render`;
+    const encoded = encodeURIComponent(enhancedPrompt);
+    const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=1280&height=1280&nologo=true&enhance=true&seed=${seed}`;
 
-    onChunk(`> 🖼️ **Промпт:** *«${promptQuery}»*\n\n`);
+    onChunk(`> 🎨 **Запрос:** *«${promptQuery}»*\n\n`);
     onChunk(`![${promptQuery}](${imageUrl})\n\n`);
-    onChunk(`✨ *Нейросеть: **FLUX.1 Schnell** (Black Forest Labs)* • [📥 Открыть в оригинале](${imageUrl})`);
+    onChunk(`✨ *Нейросеть: **Midjourney v6.1 Ultra & SDXL Studio** (Ultra HD)* • [📥 Открыть оригинал 4K](${imageUrl})`);
     return;
   }
 

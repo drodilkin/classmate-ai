@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowUp, Plus, Camera, Image as GalleryIcon, X, StopCircle, Mic, MicOff, Zap, ListOrdered, CheckCircle2, BookOpen } from 'lucide-react';
+import { ArrowUp, Plus, Camera, Image as GalleryIcon, X, StopCircle, Zap, ListOrdered, CheckCircle2, BookOpen, Sparkles } from 'lucide-react';
 import { detectExerciseInQuery } from '../constants/exerciseIndex.js';
 import { renderPdfPageToDataUrl } from '../services/pdfRenderer.js';
+import { triggerHaptic } from '../utils/haptics.js';
 
 const QUICK_MATH = ['√', 'x²', 'π', '±', '≤', '≥', '÷', '≈', '°'];
 
@@ -9,7 +10,6 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
   const [text, setText] = useState('');
   const [images, setImages] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isListening, setIsListening] = useState(false);
   const [attachingExercise, setAttachingExercise] = useState(false);
   const [selectedSubjectOverride, setSelectedSubjectOverride] = useState(null);
 
@@ -17,59 +17,6 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
   const cameraInputRef = useRef(null);
   const galleryInputRef = useRef(null);
   const menuRef = useRef(null);
-  const recognitionRef = useRef(null);
-
-  // Initialize Speech Recognition
-  useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'ru-RU';
-
-      recognition.onresult = (event) => {
-        let currentTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          currentTranscript += event.results[i][0].transcript;
-        }
-        setText((prev) => {
-          const base = prev.trim() ? prev.trim() + ' ' : '';
-          return base + currentTranscript;
-        });
-      };
-
-      recognition.onerror = (event) => {
-        console.warn('Speech recognition error:', event.error);
-        setIsListening(false);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = recognition;
-    }
-  }, []);
-
-  const toggleListening = () => {
-    if (!recognitionRef.current) {
-      alert('Голосовой ввод не поддерживается вашим браузером или устройством');
-      return;
-    }
-
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      try {
-        recognitionRef.current.start();
-        setIsListening(true);
-      } catch (err) {
-        console.error('Speech recognition start failed:', err);
-      }
-    }
-  };
 
   // Auto-resize textarea
   useEffect(() => {
@@ -145,10 +92,7 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
     if (e) e.preventDefault();
     if ((!text.trim() && images.length === 0) || streaming) return;
 
-    if (isListening && recognitionRef.current) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    }
+    triggerHaptic('medium');
 
     onSend(text.trim(), images, currentAlternative);
     setText('');
@@ -171,6 +115,7 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
   const appendModifierAndSend = (instruction) => {
     const baseText = text.trim();
     if (!baseText && images.length === 0) return;
+    triggerHaptic('light');
     const finalText = baseText ? `${baseText}\n\n[Инструкция: ${instruction}]` : `[Инструкция: ${instruction}]`;
     onSend(finalText, images, currentAlternative);
     setText('');
@@ -183,6 +128,7 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
 
   const handleAttachExercisePage = async () => {
     if (!currentAlternative || attachingExercise) return;
+    triggerHaptic('medium');
     setAttachingExercise(true);
     try {
       const res = await renderPdfPageToDataUrl(currentAlternative.bookFile, currentAlternative.page, 1.4);
@@ -195,6 +141,7 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
   };
 
   const insertSymbol = (sym) => {
+    triggerHaptic('selection');
     setText((prev) => prev + sym);
     textareaRef.current?.focus();
   };
@@ -238,21 +185,22 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
             <span>Только ответ</span>
           </button>
 
-          {/* "Нарисуй" image generation chip */}
+          {/* "Арт 4K" image generation chip */}
           <button
             type="button"
             onClick={() => {
+              triggerHaptic('light');
               setText(prev => {
                 const base = prev.trim();
-                return base ? `Нарисуй: ${base}` : 'Нарисуй: ';
+                return base ? `Нарисуй арт: ${base}` : 'Нарисуй арт: ';
               });
               if (textareaRef.current) textareaRef.current.focus();
             }}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-pink-50 dark:bg-pink-950/50 text-pink-700 dark:text-pink-300 border border-pink-200/80 dark:border-pink-800/80 hover:bg-pink-100 dark:hover:bg-pink-900/60 transition-all cursor-pointer shrink-0 shadow-2xs"
-            title="Сгенерировать картинку нейросетью FLUX.1"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/80 hover:bg-purple-100 dark:hover:bg-purple-900/60 transition-all cursor-pointer shrink-0 shadow-2xs native-touch"
+            title="Сгенерировать 4K изображение нейросетью Midjourney Ultra"
           >
-            <span>🎨</span>
-            <span>Нарисуй</span>
+            <Sparkles className="w-3.5 h-3.5 text-purple-500 fill-purple-500/20" />
+            <span>✨ Арт 4K</span>
           </button>
 
           {/* Math symbols */}
@@ -458,24 +406,6 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
             )}
           </div>
 
-          {/* Voice Input Microphone Button */}
-          <button
-            type="button"
-            onClick={toggleListening}
-            className={`p-2 rounded-xl transition-all cursor-pointer flex items-center justify-center shrink-0 ${
-              isListening
-                ? 'bg-red-500 text-white animate-pulse shadow-sm shadow-red-500/30'
-                : 'text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
-            }`}
-            title={isListening ? 'Остановить запись' : 'Голосовой ввод (надиктовать)'}
-          >
-            {isListening ? (
-              <MicOff className="w-4 h-4" />
-            ) : (
-              <Mic className="w-4 h-4" />
-            )}
-          </button>
-
           {/* Text Area */}
           <textarea
             ref={textareaRef}
@@ -484,7 +414,7 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
-            placeholder={isListening ? 'Говорите, слушаю...' : 'Спроси о чём угодно или надиктуй...'}
+            placeholder="Задай вопрос, прикрепи фото задачи или номер №..."
             className="w-full bg-transparent resize-none outline-none text-slate-800 dark:text-slate-100 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 py-1.5 px-1 max-h-44 leading-relaxed"
           />
 
