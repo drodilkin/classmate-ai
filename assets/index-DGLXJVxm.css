@@ -4744,7 +4744,7 @@
   }
 
   .dark\:bg-\[\#090d16\]\/95:is(.dark, .dark *) {
-    background-color: oklab(15.9628% -.00156841 -.0202709 / .95);
+    background-color: oklab(15.9628% -.00156844 -.0202709 / .95);
   }
 
   .dark\:bg-amber-900:is(.dark, .dark *) {
