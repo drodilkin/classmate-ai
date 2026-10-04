@@ -13,3 +13,6 @@ server/.env.example
 
 
 .vercel
+
+*.apk
+

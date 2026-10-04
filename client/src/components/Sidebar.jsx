@@ -20,7 +20,7 @@ const SUBJECTS = [
 export default function Sidebar({
   open, setOpen,
   chats, activeChatId, onSelectChat, onNewChat, onDeleteChat,
-  onNewChatWithSubject,
+  onNewChatWithSubject, onOpenTextbooks,
   user, onLogout, onOpenLogin
 }) {
   const [search, setSearch] = useState('');
@@ -47,7 +47,7 @@ export default function Sidebar({
         ${open ? 'translate-x-0' : '-translate-x-full lg:-translate-x-full lg:w-0 lg:border-none overflow-hidden'}
       `}>
         {/* Top Header */}
-        <div className="flex flex-col border-b border-slate-200/80 dark:border-slate-800 p-3.5 space-y-3">
+        <div className="flex flex-col border-b border-slate-200/80 dark:border-slate-800 p-3.5 space-y-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 font-semibold text-slate-900 dark:text-slate-100 text-sm tracking-tight">
               {/* Brand Logo */}
@@ -69,17 +69,36 @@ export default function Sidebar({
             </button>
           </div>
 
-          {/* New Chat Button */}
-          <button
-            onClick={() => {
-              onNewChat();
-              if (window.innerWidth < 1024) setOpen(false);
-            }}
-            className="flex items-center justify-center gap-2 w-full py-2.5 px-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-xs font-semibold rounded-xl shadow-sm shadow-indigo-500/20 active:scale-98 transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Новый диалог</span>
-          </button>
+          {/* Action Row: New Chat + Textbooks */}
+          <div className="flex flex-col gap-1.5">
+            <button
+              onClick={() => {
+                onNewChat();
+                if (window.innerWidth < 1024) setOpen(false);
+              }}
+              className="flex items-center justify-center gap-2 w-full py-2.5 px-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-xs font-semibold rounded-xl shadow-sm shadow-indigo-500/20 active:scale-98 transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Новый диалог</span>
+            </button>
+
+            {/* Textbooks Button */}
+            <button
+              onClick={() => {
+                if (onOpenTextbooks) onOpenTextbooks();
+                if (window.innerWidth < 1024) setOpen(false);
+              }}
+              className="flex items-center justify-between w-full py-2 px-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 hover:from-amber-100 hover:to-orange-100 dark:hover:from-amber-900/40 dark:hover:to-orange-900/40 text-amber-900 dark:text-amber-200 border border-amber-300/80 dark:border-amber-700/60 text-xs font-semibold rounded-xl shadow-2xs transition-all cursor-pointer group"
+            >
+              <span className="flex items-center gap-2">
+                <span className="text-base group-hover:scale-110 transition-transform">📚</span>
+                <span>Учебники (7 класс)</span>
+              </span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-200/80 dark:bg-amber-900/80 text-amber-900 dark:text-amber-100 font-bold">
+                PDF
+              </span>
+            </button>
+          </div>
 
           {/* Search Bar */}
           <div className="relative">

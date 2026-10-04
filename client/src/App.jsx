@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar.jsx';
 import MessageItem from './components/MessageItem.jsx';
 import ChatInput from './components/ChatInput.jsx';
 import SettingsModal from './components/SettingsModal.jsx';
+import TextbooksModal from './components/TextbooksModal.jsx';
 import { MODELS } from './constants/models.js';
 import { streamChat } from './services/chatStream.js';
 import AuthModal from './components/AuthModal.jsx';
@@ -39,6 +40,8 @@ export default function App() {
 
   // Settings Modal State
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Textbooks Library Modal State
+  const [textbooksOpen, setTextbooksOpen] = useState(false);
 
   const [modelId, setModelId] = useState(() => {
     return localStorage.getItem(STORAGE_MODEL) || 'mistral/pixtral-12b-2409';
@@ -241,11 +244,20 @@ export default function App() {
     const ctrl = new AbortController();
     abortRef.current = ctrl;
 
-    // Prepare messages with system prompt if configured
-    const systemPrompt = localStorage.getItem(STORAGE_PROMPT);
-    const messagesToSend = systemPrompt && systemPrompt.trim()
-      ? [{ role: 'system', content: systemPrompt.trim() }, ...newMsgs]
-      : newMsgs;
+    // Prepare messages with system prompt & textbook context
+    const customPrompt = localStorage.getItem(STORAGE_PROMPT);
+    const textbookPrompt = `Ты — ClassMate AI, школьный помощник по программе 7 класса ФГОС.
+В приложение загружены учебники:
+1) АЛГЕБРА 7 класс (Макарычев Ю.Н. под ред. Теляковского, 2023): выражения, тождества, линейные уравнения, функции y=kx+b, степени, одночлены, многочлены, формулы сокращенного умножения, системы линейных уравнений.
+2) ГЕОМЕТРИЯ 7-9 класс (Атанасян Л.С.): прямые, отрезки, углы, признаки равенства треугольников, медианы/биссектрисы/высоты, параллельные прямые, сумма углов треугольника (180°), прямоугольные треугольники.
+3) РУССКИЙ ЯЗЫК 7 класс (Баранов М.Т., Ладыженская Т.А., 2023, ч. 1): причастия (суффиксы, Н и НН, НЕ с причастиями, причастный оборот), деепричастия (суффиксы, деепричастный оборот), наречия (степени сравнения, НЕ и НИ, Н и НН, дефис, О/А на конце).
+Решай задачи пошагово, пиши формулы в LaTeX ($x^2$, \\frac{a}{b}), приводи правила и теоремы.`;
+
+    const fullSystemPrompt = customPrompt && customPrompt.trim()
+      ? `${customPrompt.trim()}\n\n[База знаний учебников:]\n${textbookPrompt}`
+      : textbookPrompt;
+
+    const messagesToSend = [{ role: 'system', content: fullSystemPrompt }, ...newMsgs];
 
     try {
       await streamChat({
@@ -311,6 +323,7 @@ export default function App() {
         onNewChat={handleNewChat}
         onDeleteChat={handleDeleteChat}
         onNewChatWithSubject={handleNewChatWithSubject}
+        onOpenTextbooks={() => setTextbooksOpen(true)}
         user={user}
         onLogout={handleLogout}
         onOpenLogin={() => setAuthModalOpen(true)}
@@ -464,6 +477,16 @@ export default function App() {
         darkMode={darkMode}
         setDarkMode={setDarkMode}
         onClearAll={handleClearAllChats}
+      />
+
+      {/* Textbooks Library Modal */}
+      <TextbooksModal
+        isOpen={textbooksOpen}
+        onClose={() => setTextbooksOpen(false)}
+        onAskBookTopic={(prompt) => {
+          handleSend(prompt);
+          if (window.innerWidth < 1024) setSidebarOpen(false);
+        }}
       />
     </div>
   );
