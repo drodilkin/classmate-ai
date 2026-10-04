@@ -76,9 +76,9 @@ export default function Header({
                 className="fixed inset-0 z-40"
                 onClick={() => setModelOpen(false)}
               />
-              <div className="absolute left-0 mt-2 w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-1.5 z-50 animate-scale-up">
-                <div className="px-2.5 py-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                  Нейросеть репетитора
+              <div className="absolute left-0 mt-2 w-80 sm:w-84 max-h-[75vh] overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-1.5 z-50 animate-scale-up space-y-0.5">
+                <div className="px-2.5 py-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider sticky top-0 bg-white dark:bg-slate-900 z-10 border-b border-slate-100 dark:border-slate-800 mb-1">
+                  Выбор нейросети ({MODELS.length} моделей)
                 </div>
 
                 {MODELS.map(m => {
