@@ -32,10 +32,11 @@ function createTimeoutController(userSignal, timeoutMs = 4500) {
 }
 
 /**
- * Stream AI responses with instant 200ms latency and guaranteed fast fallback
+ * Stream AI responses with instant latency and guaranteed auto-failover
+ * Cascade: DeepSeek V3 -> Mistral Ministral -> HF Llama -> HF Qwen
  */
 export async function streamChat({ modelId = 'deepseek/chat', messages, images, onChunk, signal }) {
-  // 1. If images are attached -> Pixtral Vision (with strict 4s timeout)
+  // 1. If images are attached -> Pixtral Vision (with fallback to text advice)
   if (images && images.length > 0) {
     try {
       await streamMistralVision({ messages, images, onChunk, signal });
@@ -46,24 +47,25 @@ export async function streamChat({ modelId = 'deepseek/chat', messages, images, 
     }
   }
 
-  // 2. If DeepSeek R1 reasoning is selected -> Official DeepSeek Reasoner
+  // 2. If DeepSeek R1 reasoning is selected -> Official DeepSeek Reasoner with fast fallback
   if (modelId.includes('r1') || modelId.includes('reason')) {
+    let gotChunk = false;
     try {
       await streamDeepSeekDirect({
         model: 'deepseek-reasoner',
         messages,
-        onChunk,
-        signal
+        onChunk: (c) => { gotChunk = true; onChunk(c); },
+        signal,
+        timeoutMs: 8000
       });
       return;
     } catch (err) {
       console.warn('DeepSeek Reasoner failed, fallback to fast V3:', err.message);
+      if (gotChunk) return; // If already outputted tokens, don't double output
     }
   }
 
-  // 3. For any text model (DeepSeek V3, Mistral text, Llama, Qwen):
-  // DeepSeek V3 is 10x faster, never blocked in Russia, and starts in 200ms!
-  // If user explicitly chose HuggingFace Llama 70B or Qwen 72B, try it with 3.5s timeout:
+  // 3. User specifically requested HF model:
   if (modelId.startsWith('hf/')) {
     let targetModel = 'Qwen/Qwen2.5-72B-Instruct';
     if (modelId.includes('llama-3.3') || modelId.includes('70b')) {
@@ -74,34 +76,86 @@ export async function streamChat({ modelId = 'deepseek/chat', messages, images, 
       targetModel = 'google/gemma-3-4b-it';
     }
 
+    let gotChunk = false;
     try {
-      await streamHuggingFaceDirect({ model: targetModel, messages, onChunk, signal });
+      await streamHuggingFaceDirect({
+        model: targetModel,
+        messages,
+        onChunk: (c) => { gotChunk = true; onChunk(c); },
+        signal
+      });
       return;
     } catch (err) {
       console.warn('Hugging Face slow or failed, falling back to DeepSeek V3:', err.message);
+      if (gotChunk) return;
     }
   }
 
   // 4. Primary Ultra-Fast Engine: Official DeepSeek V3 (671B)
-  // Always reliable, starts within 300ms, streaming smoothly
-  await streamDeepSeekDirect({
-    model: 'deepseek-chat',
-    messages,
-    onChunk,
-    signal
-  });
+  let receivedAnyToken = false;
+  try {
+    await streamDeepSeekDirect({
+      model: 'deepseek-chat',
+      messages,
+      onChunk: (c) => {
+        receivedAnyToken = true;
+        onChunk(c);
+      },
+      signal,
+      timeoutMs: 6000
+    });
+    return;
+  } catch (err) {
+    console.warn('DeepSeek V3 primary failed:', err.message);
+    if (receivedAnyToken) return;
+  }
+
+  // 5. Fallback Level 1: Mistral AI (ministral-14b-latest)
+  try {
+    await streamMistralDirect({
+      model: 'ministral-14b-latest',
+      messages,
+      onChunk: (c) => {
+        receivedAnyToken = true;
+        onChunk(c);
+      },
+      signal
+    });
+    return;
+  } catch (err) {
+    console.warn('Mistral fallback failed:', err.message);
+    if (receivedAnyToken) return;
+  }
+
+  // 6. Fallback Level 2: Hugging Face Router (Qwen 72B)
+  try {
+    await streamHuggingFaceDirect({
+      model: 'Qwen/Qwen2.5-72B-Instruct',
+      messages,
+      onChunk: (c) => {
+        receivedAnyToken = true;
+        onChunk(c);
+      },
+      signal
+    });
+    return;
+  } catch (err) {
+    console.warn('HF fallback failed:', err.message);
+    if (receivedAnyToken) return;
+    throw new Error('Все серверы ИИ временно перегружены. Пожалуйста, повторите запрос через пару секунд.');
+  }
 }
 
 /**
  * Direct Official DeepSeek API Stream (200ms response time)
  */
-async function streamDeepSeekDirect({ model, messages, onChunk, signal }) {
+async function streamDeepSeekDirect({ model, messages, onChunk, signal, timeoutMs = 8000 }) {
   const formattedMessages = messages.map(m => ({
     role: m.role === 'assistant' ? 'assistant' : (m.role === 'system' ? 'system' : 'user'),
     content: m.content || ' '
   }));
 
-  const timeoutCtrl = createTimeoutController(signal, 15000);
+  const timeoutCtrl = createTimeoutController(signal, timeoutMs);
 
   try {
     const res = await fetch('https://api.deepseek.com/chat/completions', {
@@ -169,6 +223,46 @@ async function streamDeepSeekDirect({ model, messages, onChunk, signal }) {
         }
       }
     }
+  } finally {
+    timeoutCtrl.clear();
+  }
+}
+
+/**
+ * Direct Mistral AI Text Stream (High-speed fallback)
+ */
+async function streamMistralDirect({ model = 'ministral-14b-latest', messages, onChunk, signal }) {
+  const formattedMessages = messages.map(m => ({
+    role: m.role === 'assistant' ? 'assistant' : (m.role === 'system' ? 'system' : 'user'),
+    content: m.content || ' '
+  }));
+
+  const timeoutCtrl = createTimeoutController(signal, 5000);
+
+  try {
+    const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${M_KEY}`
+      },
+      body: JSON.stringify({
+        model,
+        messages: formattedMessages,
+        stream: true,
+        max_tokens: 4096
+      }),
+      signal: timeoutCtrl.signal
+    });
+
+    timeoutCtrl.clear();
+
+    if (!res.ok) {
+      const errorJson = await res.json().catch(() => ({}));
+      throw new Error(errorJson.message || errorJson.error?.message || `Mistral ${res.status}`);
+    }
+
+    await pumpStandardSSE(res, onChunk);
   } finally {
     timeoutCtrl.clear();
   }

@@ -391,18 +391,26 @@ export default function App() {
       ? `${customPrompt.trim()}\n\n[База знаний учебников:]\n${textbookPrompt}`
       : textbookPrompt;
 
-    // If auto-detected, inject context into the last user message for API
+    // Sanitize message history to prevent empty strings or malformed sequences causing API stalls
     const messagesToSend = [{ role: 'system', content: fullSystemPrompt }];
     for (let i = 0; i < newMsgs.length; i++) {
       const msg = newMsgs[i];
+      let content = (msg.content || '').trim();
       if (i === newMsgs.length - 1 && promptContext) {
-        messagesToSend.push({
-          role: 'user',
-          content: `${promptContext}${msg.content}`
-        });
-      } else {
-        messagesToSend.push({ role: msg.role, content: msg.content });
+        content = `${promptContext}${content}`;
       }
+      // Skip empty assistant placeholder messages from previous turns
+      if (!content && msg.role === 'assistant') continue;
+      // Ensure user messages have at least a space if images are present
+      if (!content && msg.role === 'user' && msg.images?.length > 0) {
+        content = 'Помоги решить задание с фото';
+      }
+      if (!content) continue;
+
+      messagesToSend.push({
+        role: msg.role === 'assistant' ? 'assistant' : 'user',
+        content
+      });
     }
 
     // Ensure vision-capable model is used if images are attached, else ultra-fast DeepSeek
@@ -412,8 +420,6 @@ export default function App() {
       if (!currentModelObj || !currentModelObj.vision) {
         effectiveModel = 'mistral/pixtral-12b-2409';
       }
-    } else if (effectiveModel.startsWith('mistral/')) {
-      effectiveModel = 'deepseek/chat';
     }
 
     try {
