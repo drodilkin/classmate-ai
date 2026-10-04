@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import {
   X, Star, MessageSquare, Send, Check, ShieldCheck,
-  User, Sparkles, Filter, Download, Eye, ThumbsUp, ArrowLeft
+  User, Sparkles, Filter, Download, Eye, ThumbsUp, ArrowLeft,
+  AlertCircle, ShieldAlert, ExternalLink, RefreshCw, Bot
 } from 'lucide-react';
-import { getReviews, addReview, getReviewsStats } from '../services/reviewsStorage.js';
+import {
+  getReviews,
+  fetchAllReviews,
+  addReview,
+  getReviewsStats,
+  generateMathCaptcha,
+  getGitHubReviewIssueUrl
+} from '../services/reviewsStorage.js';
 
 export default function ReviewsModal({ isOpen, onClose, user }) {
   const [reviews, setReviews] = useState([]);
   const [stats, setStats] = useState({ average: '5.0', total: 0, breakdown: {} });
+  const [isLoading, setIsLoading] = useState(false);
   
   // New review form state
   const [author, setAuthor] = useState('');
@@ -15,20 +24,44 @@ export default function ReviewsModal({ isOpen, onClose, user }) {
   const [rating, setRating] = useState(5);
   const [subject, setSubject] = useState('Общее');
   const [text, setText] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [submittedReview, setSubmittedReview] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
   
+  // Anti-bot state
+  const [captcha, setCaptcha] = useState(() => generateMathCaptcha());
+  const [captchaInput, setCaptchaInput] = useState('');
+  const [honeypot, setHoneypot] = useState('');
+
   // Admin toggle to see full author metadata
   const [showAdminDetails, setShowAdminDetails] = useState(false);
   const [filterSubject, setFilterSubject] = useState('all');
 
-  const reload = () => {
-    setReviews(getReviews());
-    setStats(getReviewsStats());
+  const refreshCaptcha = () => {
+    setCaptcha(generateMathCaptcha());
+    setCaptchaInput('');
+  };
+
+  const loadAll = async () => {
+    setIsLoading(true);
+    try {
+      const data = await fetchAllReviews();
+      setReviews(data);
+      setStats(getReviewsStats(data));
+    } catch {
+      const fallback = getReviews();
+      setReviews(fallback);
+      setStats(getReviewsStats(fallback));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
     if (isOpen) {
-      reload();
+      loadAll();
+      refreshCaptcha();
+      setErrorMessage('');
+      setSubmittedReview(null);
       if (user && user.name && !author) {
         setAuthor(user.name);
       }
@@ -39,21 +72,30 @@ export default function ReviewsModal({ isOpen, onClose, user }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!text.trim()) return;
+    setErrorMessage('');
 
-    addReview({
-      author: author.trim() || (user ? user.name : 'Ученик 7 класса'),
-      role,
-      rating,
-      subject,
-      text: text.trim(),
-      email: user ? (user.email || user.id || '') : ''
-    });
+    try {
+      const newRev = addReview({
+        author: author.trim() || (user ? user.name : ''),
+        role,
+        rating,
+        subject,
+        text,
+        user,
+        honeypot,
+        captchaAnswer: captchaInput,
+        expectedCaptcha: captcha.answer
+      });
 
-    setText('');
-    setSubmitted(true);
-    reload();
-    setTimeout(() => setSubmitted(false), 3000);
+      setText('');
+      setCaptchaInput('');
+      setSubmittedReview(newRev);
+      loadAll();
+      refreshCaptcha();
+    } catch (err) {
+      setErrorMessage(err.message || 'Ошибка отправки отзыва.');
+      refreshCaptcha();
+    }
   };
 
   const handleExportJson = () => {
@@ -68,8 +110,10 @@ export default function ReviewsModal({ isOpen, onClose, user }) {
     ? reviews
     : reviews.filter(r => r.subject === filterSubject);
 
+  const isAuthenticated = Boolean(user && (user.name || user.email));
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center sm:p-5 bg-slate-950/80 animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center sm:p-5 bg-slate-950/80 backdrop-blur-xs animate-fade-in">
       <div className="relative w-full h-full sm:h-auto sm:max-w-2xl bg-white dark:bg-slate-900 sm:border border-slate-200 dark:border-slate-800 sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col sm:max-h-[90vh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:pt-0 sm:pb-0 animate-scale-up">
         
         {/* Header */}
@@ -89,20 +133,30 @@ export default function ReviewsModal({ isOpen, onClose, user }) {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h2 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white truncate">
-                  Отзывы о ClassMate AI
+                  Отзывы учеников
                 </h2>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-bold flex items-center gap-1 shrink-0">
                   <span>★</span> {stats.average}
                 </span>
               </div>
               <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
-                Реальные отзывы учеников ({stats.total})
+                Реальные отзывы без ботов ({stats.total})
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            {/* Admin view toggle */}
+            {/* Refresh button */}
+            <button
+              onClick={loadAll}
+              disabled={isLoading}
+              className="p-2 sm:p-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer"
+              title="Обновить отзывы"
+            >
+              <RefreshCw className={`w-4 h-4 sm:w-3.5 sm:h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            </button>
+
+            {/* Admin toggle */}
             <button
               onClick={() => setShowAdminDetails(!showAdminDetails)}
               className={`p-2 sm:p-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
@@ -113,7 +167,7 @@ export default function ReviewsModal({ isOpen, onClose, user }) {
               title="Режим создателя (кто оставил отзыв)"
             >
               <Eye className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-              <span className="hidden sm:inline">Кто оставил</span>
+              <span className="hidden sm:inline">Инфо</span>
             </button>
 
             <button
@@ -126,7 +180,7 @@ export default function ReviewsModal({ isOpen, onClose, user }) {
         </div>
 
         {/* Content list & form */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
           
           {/* Write a review card */}
           <form onSubmit={handleSubmit} className="p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-800/60 border border-slate-200/90 dark:border-slate-700/70 space-y-3 shadow-2xs">
@@ -157,12 +211,44 @@ export default function ReviewsModal({ isOpen, onClose, user }) {
               </div>
             </div>
 
+            {/* Error message banner */}
+            {errorMessage && (
+              <div className="p-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-300 text-xs flex items-start gap-2 animate-shake">
+                <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
+            {/* Success message banner with GitHub sync button */}
+            {submittedReview && (
+              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-xs space-y-2 animate-fade-in">
+                <div className="flex items-center gap-2 font-bold">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  <span>Спасибо! Ваш отзыв успешно сохранён и отображается на сайте.</span>
+                </div>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[11px] text-emerald-700 dark:text-emerald-300">
+                    Хотите, чтобы ваш отзыв был навсегда виден всем в репозитории проекта?
+                  </span>
+                  <a
+                    href={getGitHubReviewIssueUrl(submittedReview)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] transition-colors"
+                  >
+                    <span>На GitHub</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <input
                 type="text"
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
-                placeholder="Твоё имя или ник..."
+                placeholder="Твоё реальное имя (напр. Иван К.)..."
                 className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-amber-500"
               />
               <select
@@ -178,35 +264,72 @@ export default function ReviewsModal({ isOpen, onClose, user }) {
               </select>
             </div>
 
+            {/* Hidden honeypot field to trap spam bots */}
+            <input
+              type="text"
+              name="classmate_check_website"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              className="hidden"
+            />
+
             <textarea
               rows={2}
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="Напиши, как ClassMate помог с уроками, домашкой или контрольной..."
+              placeholder="Напиши честный отзыв, как ClassMate помог с уроками или домашкой..."
               className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-amber-500 resize-none leading-relaxed"
             />
 
-            <div className="flex items-center justify-between pt-1">
-              {submitted ? (
-                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                  <Check className="w-3.5 h-3.5" />
-                  Спасибо за твой отзыв! Он опубликован.
-                </span>
+            {/* Anti-bot Human Verification section */}
+            <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-2">
+              {isAuthenticated ? (
+                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-[11px] font-semibold">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                  <span>Вход выполнен ({user.name}). Защита от ботов пройдена автоматически.</span>
+                </div>
               ) : (
-                <span className="text-[11px] text-slate-400">
-                  {user ? `От автора: ${user.name}` : 'Можно оставить анонимно или с именем'}
-                </span>
+                <div className="flex items-center gap-2 text-xs">
+                  <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-medium">
+                    <Bot className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Антибот проверка:</span>
+                    <strong className="text-slate-900 dark:text-white px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800">
+                      {captcha.question}
+                    </strong>
+                  </div>
+                  <input
+                    type="number"
+                    value={captchaInput}
+                    onChange={(e) => setCaptchaInput(e.target.value)}
+                    placeholder="Ответ"
+                    className="w-16 px-2 py-1 text-xs border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-center font-bold text-slate-900 dark:text-white outline-none focus:border-amber-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={refreshCaptcha}
+                    className="text-[10px] text-slate-400 hover:text-slate-600 underline cursor-pointer"
+                  >
+                    другой пример
+                  </button>
+                </div>
               )}
 
               <button
                 type="submit"
-                disabled={!text.trim()}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-50 active:scale-95"
+                disabled={!text.trim() || (!isAuthenticated && !captchaInput)}
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-50 active:scale-95 ml-auto"
               >
                 <Send className="w-3 h-3" />
-                <span>Опубликовать</span>
+                <span>Опубликовать отзыв</span>
               </button>
             </div>
+            
+            <p className="text-[10px] text-slate-400 flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3 text-slate-400" />
+              <span>Действует автоматический фильтр нецензурных и непристойных слов. Сервис модерируется.</span>
+            </p>
           </form>
 
           {/* Subject Filter Chips */}
@@ -231,91 +354,117 @@ export default function ReviewsModal({ isOpen, onClose, user }) {
 
           {/* Reviews list */}
           <div className="space-y-3">
-            {filteredReviews.map((rev) => (
-              <div
-                key={rev.id}
-                className="p-4 rounded-2xl bg-white dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/60 shadow-2xs space-y-2 hover:border-amber-300 dark:hover:border-amber-700/60 transition-all"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${rev.color || 'from-indigo-500 to-purple-600'} text-white flex items-center justify-center font-bold text-xs shadow-2xs`}>
-                      {rev.avatarLetter || rev.author?.[0]?.toUpperCase() || 'У'}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-xs text-slate-900 dark:text-white">
-                          {rev.author}
-                        </span>
-                        {rev.verified && (
-                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold" title="Проверенный ученик">
-                            ✓
-                          </span>
-                        )}
-                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300">
-                          {rev.subject}
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-slate-400">
-                        {rev.role} · {rev.date}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Stars */}
-                  <div className="flex items-center gap-0.5">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star
-                        key={s}
-                        className={`w-3.5 h-3.5 ${
-                          s <= rev.rating
-                            ? 'fill-amber-400 text-amber-500'
-                            : 'text-slate-200 dark:text-slate-700'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Review Text */}
-                <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
-                  {rev.text}
-                </p>
-
-                {/* Admin metadata preview if toggled */}
-                {showAdminDetails && (
-                  <div className="p-2 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/60 text-[11px] text-indigo-950 dark:text-indigo-200 flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <strong>ID:</strong> {rev.id} | <strong>Аккаунт / Email:</strong> {rev.email || 'Без привязки почты'}
-                    </div>
-                    <div>
-                      <strong>Время:</strong> {new Date(rev.timestamp).toLocaleString('ru-RU')}
-                    </div>
-                  </div>
-                )}
+            {filteredReviews.length === 0 ? (
+              <div className="text-center py-8 text-slate-400 text-xs">
+                Пока нет отзывов по выбранному предмету. Будьте первыми!
               </div>
-            ))}
+            ) : (
+              filteredReviews.map((rev) => (
+                <div
+                  key={rev.id}
+                  className="p-4 rounded-2xl bg-white dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/60 shadow-2xs space-y-2 hover:border-amber-300 dark:hover:border-amber-700/60 transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      {rev.avatarUrl ? (
+                        <img
+                          src={rev.avatarUrl}
+                          alt={rev.author}
+                          className="w-8 h-8 rounded-full object-cover shadow-2xs border border-slate-200 dark:border-slate-700"
+                        />
+                      ) : (
+                        <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${rev.color || 'from-indigo-500 to-purple-600'} text-white flex items-center justify-center font-bold text-xs shadow-2xs`}>
+                          {rev.avatarLetter || rev.author?.[0]?.toUpperCase() || 'У'}
+                        </div>
+                      )}
+                      <div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-bold text-xs text-slate-900 dark:text-white">
+                            {rev.author}
+                          </span>
+                          
+                          {/* Yandex Verified Badge */}
+                          {rev.isYandex && (
+                            <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-red-50 dark:bg-red-950/60 text-[#fc3f1d] font-semibold border border-red-200/60 dark:border-red-900/60 flex items-center gap-1" title="Пользователь авторизован через Яндекс ID">
+                              <span className="font-bold">Я</span> Проверен
+                            </span>
+                          )}
+
+                          {/* GitHub Community Badge */}
+                          {rev.isGitHub && (
+                            <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-semibold border border-purple-200/60 flex items-center gap-1" title="Отзыв из репозитория GitHub">
+                              <span>GitHub</span>
+                            </span>
+                          )}
+
+                          {/* School Verified Badge */}
+                          {!rev.isYandex && !rev.isGitHub && rev.verified && (
+                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-0.5" title="Реальный ученик">
+                              <Check className="w-3 h-3" /> Ученик
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                          {rev.role} · {rev.subject} · {rev.date}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-0.5">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          className={`w-3.5 h-3.5 ${
+                            s <= (rev.rating || 5)
+                              ? 'fill-amber-400 text-amber-500'
+                              : 'text-slate-200 dark:text-slate-700'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
+                    {rev.text}
+                  </p>
+
+                  {/* Admin Metadata Inspector */}
+                  {showAdminDetails && (
+                    <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 flex items-center justify-between">
+                      <span>ID: {rev.id}</span>
+                      <span>Источник: {rev.source || 'локально'}</span>
+                      {rev.githubUrl && (
+                        <a
+                          href={rev.githubUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-indigo-500 hover:underline flex items-center gap-0.5"
+                        >
+                          <span>Смотреть на GitHub</span>
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
 
-        {/* Footer with Export for Owner */}
-        <div className="p-3 sm:px-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={handleExportJson}
-              className="flex items-center gap-1 text-[11px] text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium cursor-pointer"
-              title="Скачать все отзывы файлом JSON"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Экспорт отзывов (JSON)</span>
-            </button>
-          </div>
-
+        {/* Footer */}
+        <div className="p-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-900/80 shrink-0 text-xs">
           <button
-            onClick={onClose}
-            className="px-3.5 py-1.5 rounded-xl bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 text-xs font-bold cursor-pointer transition-colors"
+            onClick={handleExportJson}
+            className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 text-xs transition-colors cursor-pointer"
           >
-            Закрыть
+            <Download className="w-3.5 h-3.5" />
+            <span>Экспорт JSON</span>
           </button>
+
+          <span className="text-[11px] text-slate-400">
+            ClassMate AI · Отзывы без ботов
+          </span>
         </div>
       </div>
     </div>

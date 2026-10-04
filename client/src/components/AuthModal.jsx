@@ -20,7 +20,7 @@ const features = [
   }
 ];
 
-export default function AuthModal({ isOpen, onLogin }) {
+export default function AuthModal({ isOpen, onLogin, onClose }) {
   const [slide, setSlide] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -62,6 +62,15 @@ export default function AuthModal({ isOpen, onLogin }) {
   if (slide === 0) {
     return (
       <div className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-white transition-opacity duration-500 ${visible ? 'opacity-100' : 'opacity-0'}`}>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 rounded-full transition-colors cursor-pointer"
+            title="Закрыть"
+          >
+            ✕
+          </button>
+        )}
         {/* Background glow */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full bg-indigo-100/60 blur-3xl" />

@@ -12,6 +12,7 @@ import BottomNavBar from './components/BottomNavBar.jsx';
 import { MODELS } from './constants/models.js';
 import { streamChat } from './services/chatStream.js';
 import AuthModal from './components/AuthModal.jsx';
+import WelcomeModal from './components/WelcomeModal.jsx';
 import { checkAndHandleYandexToken } from './services/yandexAuth.js';
 import { ArrowRight, Image as ImgIcon, Zap, Sparkles, Plus, Camera, Send } from 'lucide-react';
 import { detectExerciseInQuery } from './constants/exerciseIndex.js';
@@ -122,18 +123,25 @@ export default function App() {
     return null;
   });
 
-  // Open modal if user is not authenticated yet
-  const [authModalOpen, setAuthModalOpen] = useState(() => {
+  // Welcome Greeting Modal for Unregistered Visitors
+  const [welcomeModalOpen, setWelcomeModalOpen] = useState(() => {
     try {
-      return !localStorage.getItem(STORAGE_USER);
+      if (localStorage.getItem(STORAGE_USER)) return false;
+      const welcomed = localStorage.getItem('classmate_welcomed');
+      const sessionWelcomed = sessionStorage.getItem('classmate_welcomed_session');
+      return !welcomed && !sessionWelcomed;
     } catch {
       return false;
     }
   });
 
+  // Explicit Login modal state (opened by user from settings/header)
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
   const handleLogin = (newUser) => {
     setUser(newUser);
     setAuthModalOpen(false);
+    setWelcomeModalOpen(false);
     try {
       localStorage.setItem(STORAGE_USER, JSON.stringify(newUser));
     } catch {}
@@ -195,6 +203,7 @@ export default function App() {
         if (bookmarksOpen) { setBookmarksOpen(false); setMobileTab('chat'); return; }
         if (reviewsOpen) { setReviewsOpen(false); setMobileTab('chat'); return; }
         if (settingsOpen) { setSettingsOpen(false); setMobileTab('chat'); return; }
+        if (welcomeModalOpen) { setWelcomeModalOpen(false); return; }
         if (authModalOpen) { setAuthModalOpen(false); return; }
         if (sidebarOpen && window.innerWidth < 1024) { setSidebarOpen(false); return; }
 
@@ -206,7 +215,7 @@ export default function App() {
     return () => {
       if (sub && sub.remove) sub.remove();
     };
-  }, [textbooksOpen, cheatSheetOpen, bookmarksOpen, reviewsOpen, settingsOpen, authModalOpen, sidebarOpen]);
+  }, [textbooksOpen, cheatSheetOpen, bookmarksOpen, reviewsOpen, settingsOpen, authModalOpen, welcomeModalOpen, sidebarOpen]);
 
   const abortRef = useRef(null);
   const bottomRef = useRef(null);
@@ -762,9 +771,17 @@ export default function App() {
         streaming={streaming}
       />
 
+      {/* Welcome Greeting Modal for Unregistered Users */}
+      <WelcomeModal
+        isOpen={welcomeModalOpen && !user}
+        onClose={() => setWelcomeModalOpen(false)}
+        onLogin={handleLogin}
+      />
+
       {/* Yandex ID Authentication Modal */}
       <AuthModal
-        isOpen={authModalOpen || !user}
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
         onLogin={handleLogin}
       />
 
