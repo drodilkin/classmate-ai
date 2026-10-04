@@ -100,7 +100,12 @@ export default function App() {
   const [heroPrompt, setHeroPrompt] = useState('');
 
   const [modelId, setModelId] = useState(() => {
-    return localStorage.getItem(STORAGE_MODEL) || 'deepseek/chat';
+    const saved = localStorage.getItem(STORAGE_MODEL);
+    if (!saved || saved.startsWith('mistral/')) {
+      localStorage.setItem(STORAGE_MODEL, 'deepseek/chat');
+      return 'deepseek/chat';
+    }
+    return saved;
   });
 
   const [chats, setChats] = useState(() => {
@@ -108,7 +113,7 @@ export default function App() {
       const saved = JSON.parse(localStorage.getItem(STORAGE_CHATS));
       if (Array.isArray(saved) && saved.length > 0) return saved;
     } catch {}
-    return [createChat('mistral/pixtral-12b-2409')];
+    return [createChat('deepseek/chat')];
   });
 
   const [activeChatId, setActiveChatId] = useState(() => chats[0]?.id);
@@ -400,13 +405,15 @@ export default function App() {
       }
     }
 
-    // Ensure vision-capable model is used if images are attached
+    // Ensure vision-capable model is used if images are attached, else ultra-fast DeepSeek
     let effectiveModel = modelId;
     if (finalImages.length > 0) {
       const currentModelObj = MODELS.find(m => m.id === modelId);
       if (!currentModelObj || !currentModelObj.vision) {
         effectiveModel = 'mistral/pixtral-12b-2409';
       }
+    } else if (effectiveModel.startsWith('mistral/')) {
+      effectiveModel = 'deepseek/chat';
     }
 
     try {
