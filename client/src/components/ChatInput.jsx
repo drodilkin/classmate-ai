@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowUp, Plus, Camera, Image as GalleryIcon, X, StopCircle, Mic, MicOff, Zap, ListOrdered, CheckCircle2 } from 'lucide-react';
+import { ArrowUp, Plus, Camera, Image as GalleryIcon, X, StopCircle, Mic, MicOff, Zap, ListOrdered, CheckCircle2, BookOpen } from 'lucide-react';
 
 const QUICK_MATH = ['√', 'x²', 'π', '±', '≤', '≥', '÷', '≈', '°'];
 
-export default function ChatInput({ onSend, onStop, streaming }) {
+export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks }) {
   const [text, setText] = useState('');
   const [images, setImages] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -326,6 +326,31 @@ export default function ChatInput({ onSend, onStop, streaming }) {
                     <div className="text-[10px] text-slate-400 dark:text-slate-500">Выбрать готовые фото</div>
                   </div>
                 </button>
+
+                {/* Option 3: Textbook Page */}
+                {onOpenTextbooks && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onOpenTextbooks();
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-950 dark:hover:text-amber-200 transition-colors cursor-pointer group border-t border-slate-100 dark:border-slate-700/60 mt-0.5"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <BookOpen className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span>Страница из учебника</span>
+                        <span className="text-[9px] px-1 py-0.2 rounded bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100 font-bold">
+                          7 кл
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-slate-400 dark:text-slate-500">Алгебра, геометрия, русский</div>
+                    </div>
+                  </button>
+                )}
               </div>
             )}
           </div>

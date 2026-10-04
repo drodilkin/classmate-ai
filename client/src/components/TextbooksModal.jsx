@@ -1,22 +1,94 @@
-import React, { useState } from 'react';
-import { X, BookOpen, ExternalLink, MessageSquare, ChevronDown, ChevronUp, Sparkles, Download } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, BookOpen, ChevronDown, ChevronUp, Sparkles, Download, Camera, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 import { TEXTBOOKS } from '../constants/textbooks.js';
+import { renderPdfPageToDataUrl } from '../services/pdfRenderer.js';
 
-export default function TextbooksModal({ isOpen, onClose, onAskBookTopic }) {
+export default function TextbooksModal({ isOpen, onClose, onAskBookTopic, onSendBookPage }) {
   const [activeBookId, setActiveBookId] = useState(TEXTBOOKS[0].id);
   const [expandedChapter, setExpandedChapter] = useState(0);
   const [pdfViewerUrl, setPdfViewerUrl] = useState(null);
 
-  if (!isOpen) return null;
+  // Page selector & image render state
+  const [pageInput, setPageInput] = useState('36');
+  const [currentPage, setCurrentPage] = useState(36);
+  const [totalPages, setTotalPages] = useState(257);
+  const [pagePreview, setPagePreview] = useState(null);
+  const [loadingPage, setLoadingPage] = useState(false);
 
   const currentBook = TEXTBOOKS.find(b => b.id === activeBookId) || TEXTBOOKS[0];
 
+  // Set default page when changing book
+  useEffect(() => {
+    if (activeBookId === 'algebra_7') {
+      setCurrentPage(36);
+      setPageInput('36');
+      setTotalPages(257);
+    } else if (activeBookId === 'geometry_7_9') {
+      setCurrentPage(29);
+      setPageInput('29');
+      setTotalPages(417);
+    } else if (activeBookId === 'russian_7_1') {
+      setCurrentPage(89);
+      setPageInput('89');
+      setTotalPages(249);
+    }
+  }, [activeBookId]);
+
+  // Load preview when currentPage changes and modal is open
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+
+    async function loadPage() {
+      setLoadingPage(true);
+      try {
+        const res = await renderPdfPageToDataUrl(currentBook.file, currentPage, 0.9);
+        if (!cancelled) {
+          setPagePreview(res.dataUrl);
+          setTotalPages(res.totalPages);
+        }
+      } catch (err) {
+        console.warn('Preview error:', err);
+      } finally {
+        if (!cancelled) setLoadingPage(false);
+      }
+    }
+
+    loadPage();
+    return () => { cancelled = true; };
+  }, [currentBook.file, currentPage, isOpen]);
+
+  if (!isOpen) return null;
+
   const handleOpenPdf = (fileUrl) => {
-    // Determine base path (relative to origin/base)
     const base = import.meta.env.BASE_URL || '/';
     const cleanBase = base.endsWith('/') ? base : base + '/';
-    const fullUrl = cleanBase + fileUrl;
-    setPdfViewerUrl(fullUrl);
+    setPdfViewerUrl(cleanBase + fileUrl);
+  };
+
+  const handleGoToPage = (num) => {
+    const p = Math.max(1, Math.min(num, totalPages));
+    setCurrentPage(p);
+    setPageInput(String(p));
+  };
+
+  const handleSendToAi = async () => {
+    setLoadingPage(true);
+    try {
+      // High-res render for AI
+      const res = await renderPdfPageToDataUrl(currentBook.file, currentPage, 1.5);
+      const textPrompt = `Реши задания со страницы ${currentPage} учебника «${currentBook.title}» (${currentBook.authors}). Объясни всё подробно и пошагово с формулами:`;
+      if (onSendBookPage) {
+        onSendBookPage(textPrompt, [res.dataUrl]);
+      } else if (onAskBookTopic) {
+        onAskBookTopic(textPrompt);
+      }
+      onClose();
+    } catch (err) {
+      alert('Ошибка при подготовке страницы: ' + err.message);
+    } finally {
+      setLoadingPage(false);
+    }
   };
 
   return (
@@ -45,7 +117,7 @@ export default function TextbooksModal({ isOpen, onClose, onAskBookTopic }) {
                   </span>
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Алгебра, геометрия и русский язык с оглавлением и поддержкой ИИ
+                  Выбирай страницу учебника и отправляй ИИ для мгновенного решения
                 </p>
               </div>
             </div>
@@ -84,53 +156,116 @@ export default function TextbooksModal({ isOpen, onClose, onAskBookTopic }) {
           </div>
 
           {/* Book Detail & Chapters Body */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
-            {/* Textbook Info Card */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-indigo-50/30 dark:from-slate-800/80 dark:to-indigo-950/20 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg ${currentBook.badgeColor}`}>
-                    {currentBook.grade}
-                  </span>
-                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                    {currentBook.publisher}
-                  </span>
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+            
+            {/* Quick Page Sender to AI */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/50 dark:from-slate-800/90 dark:via-slate-800/60 dark:to-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800/60 shadow-sm space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <span>📸 Отправить страницу учебника нейросети</span>
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Укажи номер страницы — нейросеть с фото-зрением сама прочитает номера заданий и решит их!
+                  </p>
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-                  {currentBook.title}
-                </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">Авторы:</span> {currentBook.authors}
-                </p>
+
+                {/* Page Navigation Controls */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => handleGoToPage(currentPage - 1)}
+                    disabled={currentPage <= 1}
+                    className="p-2 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 disabled:opacity-40 transition-colors cursor-pointer"
+                    title="Предыдущая страница"
+                  >
+                    <ArrowLeft className="w-4 h-4 text-slate-700 dark:text-slate-200" />
+                  </button>
+
+                  <div className="flex items-center gap-1 text-xs">
+                    <span className="text-slate-500">Стр.</span>
+                    <input
+                      type="number"
+                      value={pageInput}
+                      onChange={(e) => setPageInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleGoToPage(parseInt(pageInput, 10) || 1);
+                      }}
+                      className="w-16 px-2 py-1.5 rounded-lg border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-slate-800 text-center font-bold text-xs text-indigo-900 dark:text-indigo-200 outline-none"
+                    />
+                    <span className="text-slate-400">из {totalPages}</span>
+                  </div>
+
+                  <button
+                    onClick={() => handleGoToPage(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                    className="p-2 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 disabled:opacity-40 transition-colors cursor-pointer"
+                    title="Следующая страница"
+                  >
+                    <ArrowRight className="w-4 h-4 text-slate-700 dark:text-slate-200" />
+                  </button>
+                </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-wrap sm:flex-col gap-2 shrink-0">
-                <button
-                  onClick={() => handleOpenPdf(currentBook.file)}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs transition-all shadow-sm shadow-indigo-500/20 cursor-pointer"
-                >
-                  <BookOpen className="w-4 h-4" />
-                  <span>Открыть учебник (PDF)</span>
-                </button>
+              {/* Preview & Send Button Area */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 pt-2 border-t border-indigo-100 dark:border-slate-700/60">
+                {/* Page Preview Thumbnail */}
+                <div className="relative w-36 h-48 sm:w-40 sm:h-52 bg-slate-100 dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 shadow-md shrink-0 flex items-center justify-center">
+                  {loadingPage ? (
+                    <div className="flex flex-col items-center gap-2 text-indigo-500">
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                      <span className="text-[10px]">Загрузка стр...</span>
+                    </div>
+                  ) : pagePreview ? (
+                    <img
+                      src={pagePreview}
+                      alt={`Стр. ${currentPage}`}
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <span className="text-xs text-slate-400">Нет превью</span>
+                  )}
+                </div>
 
-                <button
-                  onClick={() => {
-                    onAskBookTopic(`Я учусь по учебнику "${currentBook.title}" (${currentBook.authors}). Помоги мне разобраться с домашним заданием: `);
-                    onClose();
-                  }}
-                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 text-slate-700 dark:text-slate-200 font-medium text-xs transition-colors cursor-pointer"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-                  <span>Задать вопрос ИИ</span>
-                </button>
+                {/* Info & Big Send Button */}
+                <div className="flex-1 space-y-3 w-full">
+                  <div className="text-xs text-slate-600 dark:text-slate-300 space-y-1">
+                    <p className="font-semibold text-slate-800 dark:text-slate-100">
+                      📖 {currentBook.title} — Страница {currentPage}
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      Нейросеть получит снимок этой страницы в максимальном качестве, прочитает условие нужного номера и выдаст пошаговое оформление в тетрадь.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button
+                      onClick={handleSendToAi}
+                      disabled={loadingPage}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold text-xs shadow-md shadow-indigo-500/20 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
+                    >
+                      <Camera className="w-4 h-4" />
+                      <span>Отправить эту страницу ИИ для решения</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleOpenPdf(currentBook.file)}
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs transition-colors cursor-pointer"
+                    >
+                      <BookOpen className="w-3.5 h-3.5" />
+                      <span>Открыть всю книгу</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Chapters & Topics List */}
             <div className="space-y-2.5">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
-                Оглавление и темы для изучения
+                Оглавление и темы программы
               </h4>
 
               <div className="space-y-2">

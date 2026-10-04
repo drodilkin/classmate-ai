@@ -461,6 +461,7 @@ export default function App() {
           onSend={handleSend}
           onStop={handleStop}
           streaming={streaming}
+          onOpenTextbooks={() => setTextbooksOpen(true)}
         />
       </div>
 
@@ -485,6 +486,10 @@ export default function App() {
         onClose={() => setTextbooksOpen(false)}
         onAskBookTopic={(prompt) => {
           handleSend(prompt);
+          if (window.innerWidth < 1024) setSidebarOpen(false);
+        }}
+        onSendBookPage={(prompt, imgs) => {
+          handleSend(prompt, imgs);
           if (window.innerWidth < 1024) setSidebarOpen(false);
         }}
       />
