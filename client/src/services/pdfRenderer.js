@@ -1,20 +1,29 @@
 import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-// Use local or unpkg worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+// Set worker source to bundled local worker with fallback
+if (typeof window !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker || `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+}
 
 const pdfCache = new Map();
 
 export async function getPdfDocument(fileUrl) {
-  const base = import.meta.env.BASE_URL || '/';
+  const base = import.meta.env.BASE_URL || './';
   const cleanBase = base.endsWith('/') ? base : base + '/';
-  const fullUrl = fileUrl.startsWith('http') ? fileUrl : cleanBase + fileUrl;
+  const cleanPath = fileUrl.startsWith('/') ? fileUrl.slice(1) : fileUrl;
+  const fullUrl = fileUrl.startsWith('http')
+    ? fileUrl
+    : new URL(cleanBase + cleanPath, window.location.href).href;
 
   if (pdfCache.has(fullUrl)) {
     return pdfCache.get(fullUrl);
   }
 
-  const loadingTask = pdfjsLib.getDocument(fullUrl);
+  const loadingTask = pdfjsLib.getDocument({
+    url: fullUrl,
+    withCredentials: false,
+  });
   const pdf = await loadingTask.promise;
   pdfCache.set(fullUrl, pdf);
   return pdf;

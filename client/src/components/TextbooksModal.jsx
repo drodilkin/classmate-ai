@@ -61,9 +61,13 @@ export default function TextbooksModal({ isOpen, onClose, onAskBookTopic, onSend
   if (!isOpen) return null;
 
   const handleOpenPdf = (fileUrl) => {
-    const base = import.meta.env.BASE_URL || '/';
+    const base = import.meta.env.BASE_URL || './';
     const cleanBase = base.endsWith('/') ? base : base + '/';
-    setPdfViewerUrl(cleanBase + fileUrl);
+    const cleanPath = fileUrl.startsWith('/') ? fileUrl.slice(1) : fileUrl;
+    const fullUrl = fileUrl.startsWith('http')
+      ? fileUrl
+      : new URL(cleanBase + cleanPath, window.location.href).href;
+    setPdfViewerUrl(fullUrl);
   };
 
   const handleGoToPage = (num) => {
