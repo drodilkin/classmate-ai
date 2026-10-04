@@ -112,8 +112,6 @@
     --color-amber-900: oklch(41.4% .112 45.904);
     --color-amber-950: oklch(27.9% .077 45.635);
     --color-yellow-300: oklch(90.5% .182 98.111);
-    --color-yellow-400: oklch(85.2% .199 91.936);
-    --color-yellow-500: oklch(79.5% .184 86.047);
     --color-emerald-50: oklch(97.9% .021 166.113);
     --color-emerald-100: oklch(95% .052 163.051);
     --color-emerald-200: oklch(90.5% .093 164.15);
@@ -1091,10 +1089,6 @@
 
   .max-w-5xl {
     max-width: var(--container-5xl);
-  }
-
-  .max-w-\[70\%\] {
-    max-width: 70%;
   }
 
   .max-w-\[88\%\] {
@@ -2228,16 +2222,6 @@
     }
   }
 
-  .bg-slate-900\/98 {
-    background-color: #0f172bfa;
-  }
-
-  @supports (color: color-mix(in lab, red, red)) {
-    .bg-slate-900\/98 {
-      background-color: color-mix(in oklab, var(--color-slate-900) 98%, transparent);
-    }
-  }
-
   .bg-slate-950\/60 {
     background-color: #02061899;
   }
@@ -2358,10 +2342,6 @@
     .bg-white\/95 {
       background-color: color-mix(in oklab, var(--color-white) 95%, transparent);
     }
-  }
-
-  .bg-yellow-500 {
-    background-color: var(--color-yellow-500);
   }
 
   .bg-gradient-to-br {
@@ -3309,10 +3289,6 @@
     color: var(--color-slate-900);
   }
 
-  .text-slate-950 {
-    color: var(--color-slate-950);
-  }
-
   .text-transparent {
     color: #0000;
   }
@@ -3327,10 +3303,6 @@
 
   .text-white {
     color: var(--color-white);
-  }
-
-  .text-yellow-400 {
-    color: var(--color-yellow-400);
   }
 
   .uppercase {
@@ -4029,10 +4001,6 @@
       }
     }
 
-    .hover\:bg-yellow-400:hover {
-      background-color: var(--color-yellow-400);
-    }
-
     .hover\:from-amber-600:hover {
       --tw-gradient-from: var(--color-amber-600);
       --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
@@ -4726,7 +4694,7 @@
   }
 
   .dark\:bg-\[\#090d16\]\/95:is(.dark, .dark *) {
-    background-color: oklab(15.9628% -.00156844 -.0202709 / .95);
+    background-color: oklab(15.9628% -.00156841 -.0202709 / .95);
   }
 
   .dark\:bg-amber-900:is(.dark, .dark *) {
