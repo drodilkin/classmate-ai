@@ -110,38 +110,46 @@ export default function TextbooksModal({ isOpen, onClose, onAskBookTopic, onSend
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Full screen on mobile, elegant dialog on desktop */}
       <div
-        className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm animate-fade-in"
+        className="fixed inset-0 z-50 flex items-center justify-center sm:p-4 bg-slate-950/80 animate-fade-in"
         onClick={onClose}
       >
-        {/* Modal Window */}
+        {/* Modal / Screen Window */}
         <div
-          className="relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-scale-up"
+          className="relative w-full h-full sm:h-auto sm:max-w-4xl sm:max-h-[92vh] flex flex-col bg-white dark:bg-slate-900 sm:rounded-3xl shadow-2xl sm:border border-slate-200 dark:border-slate-800 overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:pt-0 sm:pb-0 animate-scale-up"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center text-xl font-bold shadow-md shadow-indigo-500/20">
+          <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 shrink-0">
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="sm:hidden p-2 -ml-1 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                title="Назад"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center text-lg sm:text-xl font-bold shadow-md shadow-indigo-500/20 shrink-0">
                 📚
               </div>
-              <div>
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  Школьные учебники (7 класс)
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-300 dark:border-emerald-800">
-                    ФГОС 2023
+              <div className="min-w-0">
+                <h2 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-2 truncate">
+                  <span>Учебники 7 класс</span>
+                  <span className="text-[10px] sm:text-xs px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-300 dark:border-emerald-800 shrink-0">
+                    ФГОС
                   </span>
                 </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Выбирай страницу учебника и отправляй ИИ для мгновенного решения
+                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
+                  Выбирай страницу или номер задания
                 </p>
               </div>
             </div>
 
             <button
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+              className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer shrink-0"
             >
               <X className="w-5 h-5" />
             </button>

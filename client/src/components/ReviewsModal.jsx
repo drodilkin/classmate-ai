@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   X, Star, MessageSquare, Send, Check, ShieldCheck,
-  User, Sparkles, Filter, Download, Eye, ThumbsUp
+  User, Sparkles, Filter, Download, Eye, ThumbsUp, ArrowLeft
 } from 'lucide-react';
 import { getReviews, addReview, getReviewsStats } from '../services/reviewsStorage.js';
 
@@ -69,42 +69,50 @@ export default function ReviewsModal({ isOpen, onClose, user }) {
     : reviews.filter(r => r.subject === filterSubject);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/60 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scale-up">
+    <div className="fixed inset-0 z-50 flex items-center justify-center sm:p-5 bg-slate-950/80 animate-fade-in">
+      <div className="relative w-full h-full sm:h-auto sm:max-w-2xl bg-white dark:bg-slate-900 sm:border border-slate-200 dark:border-slate-800 sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col sm:max-h-[90vh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:pt-0 sm:pb-0 animate-scale-up">
         
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-amber-50/80 via-orange-50/50 to-white dark:from-slate-800/80 dark:via-amber-950/40 dark:to-slate-900">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-amber-500/20">
+        <div className="p-3.5 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-amber-50/90 via-orange-50/60 to-white dark:from-slate-800/90 dark:via-amber-950/40 dark:to-slate-900 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={onClose}
+              className="sm:hidden p-2 -ml-1 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+              title="Назад"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center text-base sm:text-lg font-bold shadow-md shadow-amber-500/20 shrink-0">
               ⭐
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                <h2 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white truncate">
                   Отзывы о ClassMate AI
                 </h2>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-bold flex items-center gap-1">
-                  <span>★</span> {stats.average} / 5.0
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-bold flex items-center gap-1 shrink-0">
+                  <span>★</span> {stats.average}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Реальные отзывы учеников и родителей ({stats.total} отзывов)
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
+                Реальные отзывы учеников ({stats.total})
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             {/* Admin view toggle */}
             <button
               onClick={() => setShowAdminDetails(!showAdminDetails)}
-              className={`p-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+              className={`p-2 sm:p-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
                 showAdminDetails
                   ? 'bg-indigo-600 text-white'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
-              title="Переключить детальный режим (кто оставил отзыв)"
+              title="Режим создателя (кто оставил отзыв)"
             >
-              <Eye className="w-3.5 h-3.5" />
+              <Eye className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
               <span className="hidden sm:inline">Кто оставил</span>
             </button>
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Search, Copy, Check, Send, Sparkles, BookOpen, ChevronRight } from 'lucide-react';
+import { X, Search, Copy, Check, Send, Sparkles, BookOpen, ChevronRight, ArrowLeft } from 'lucide-react';
 
 const CHEAT_DATA = {
   algebra: {
@@ -137,24 +137,32 @@ export default function CheatSheetModal({ isOpen, onClose, onInsertToChat }) {
   const filterQuery = search.toLowerCase().trim();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/60 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh] animate-scale-up">
+    <div className="fixed inset-0 z-50 flex items-center justify-center sm:p-5 bg-slate-950/80 animate-fade-in">
+      <div className="relative w-full h-full sm:h-auto sm:max-w-2xl bg-white dark:bg-slate-900 sm:border border-slate-200 dark:border-slate-800 sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col sm:max-h-[88vh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:pt-0 sm:pb-0 animate-scale-up">
         
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-indigo-50/80 via-purple-50/60 to-white dark:from-slate-800/80 dark:via-indigo-950/40 dark:to-slate-900">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-indigo-500/20">
+        <div className="p-3.5 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-indigo-50/90 via-purple-50/60 to-white dark:from-slate-800/90 dark:via-indigo-950/40 dark:to-slate-900 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={onClose}
+              className="sm:hidden p-2 -ml-1 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+              title="Назад"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center text-base sm:text-lg font-bold shadow-md shadow-indigo-500/20 shrink-0">
               📐
             </div>
-            <div>
-              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                Шпаргалка формул и правил
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-semibold">
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-2 truncate">
+                <span>Шпаргалка формул</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-semibold shrink-0">
                   7 класс
                 </span>
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Быстрый доступ к формулам ФСУ, теоремам и правилам русского языка
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
+                ФСУ, геометрия и правила русского языка
               </p>
             </div>
           </div>

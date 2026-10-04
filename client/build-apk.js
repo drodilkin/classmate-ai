@@ -40,10 +40,13 @@ run(`${gradlew} assembleDebug`, androidDir);
 // Find APK
 const apkPath = path.join(androidDir, 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
 if (fs.existsSync(apkPath)) {
-  const dest = path.join(clientDir, '..', 'ClassMateAI.apk');
-  fs.copyFileSync(apkPath, dest);
+  const dest1 = path.join(clientDir, '..', 'ClassMateAI.apk');
+  const dest2 = path.join(clientDir, 'ClassMateAI.apk');
+  fs.copyFileSync(apkPath, dest1);
+  fs.copyFileSync(apkPath, dest2);
   console.log('\n✅ APK готов!');
-  console.log(`📦 Файл: ${dest}`);
+  console.log(`📦 Файл: ${dest1}`);
+  console.log(`📦 Файл: ${dest2}`);
   console.log('\nУстановка на телефон:');
   console.log('  adb install ClassMateAI.apk');
   console.log('  — или перекинь файл на телефон и открой\n');

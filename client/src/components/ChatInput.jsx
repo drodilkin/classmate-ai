@@ -345,12 +345,22 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
             onChange={handleFiles}
           />
 
+          {/* Direct Mobile Camera Button for instant photo of homework */}
+          <button
+            type="button"
+            onClick={() => cameraInputRef.current?.click()}
+            className="sm:hidden p-2 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 rounded-xl transition-all cursor-pointer flex items-center justify-center shrink-0 active:scale-90"
+            title="Сделать фото задания"
+          >
+            <Camera className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+          </button>
+
           {/* Plus Button Container with Popover Menu */}
           <div className="relative shrink-0" ref={menuRef}>
             <button
               type="button"
               onClick={() => setMenuOpen(prev => !prev)}
-              className={`p-2 rounded-xl transition-all cursor-pointer flex items-center justify-center ${
+              className={`p-2 rounded-xl transition-all cursor-pointer flex items-center justify-center active:scale-90 ${
                 menuOpen 
                   ? 'bg-indigo-600 text-white rotate-45 shadow-sm' 
                   : 'text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
@@ -489,7 +499,7 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
           )}
         </div>
 
-        <div className="flex items-center justify-between px-2 text-[11px] text-slate-400 dark:text-slate-500">
+        <div className="hidden sm:flex items-center justify-between px-2 text-[11px] text-slate-400 dark:text-slate-500">
           <span>Нажми ⚡ «Кратко в строчку» для моментального лаконичного ответа</span>
           <span>ClassMate AI</span>
         </div>

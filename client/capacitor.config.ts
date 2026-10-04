@@ -6,9 +6,9 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   plugins: {
     SplashScreen: {
-      launchShowDuration: 2500,
+      launchShowDuration: 400,
       launchAutoHide: true,
-      backgroundColor: '#ffffff',
+      backgroundColor: '#0f172a',
       androidSplashResourceName: 'splash',
       androidScaleType: 'CENTER_CROP',
       showSpinner: false,
@@ -16,13 +16,14 @@ const config: CapacitorConfig = {
       splashImmersive: true,
     },
     StatusBar: {
-      style: 'LIGHT',
-      backgroundColor: '#ffffff',
+      style: 'DARK',
+      backgroundColor: '#0f172a',
     },
   },
   android: {
     allowMixedContent: true,
     webContentsDebuggingEnabled: false,
+    backgroundColor: '#0f172a',
   },
 };
 

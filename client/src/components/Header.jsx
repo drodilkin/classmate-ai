@@ -44,7 +44,7 @@ export default function Header({
   const progressPercent = Math.min(100, Math.round((dailyCount / dailyGoal) * 100));
 
   return (
-    <header className="h-14 border-b border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-2.5 sm:px-4 flex items-center justify-between z-30 shrink-0 transition-all select-none">
+    <header className="pt-[env(safe-area-inset-top)] h-[calc(3.5rem+env(safe-area-inset-top))] border-b border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-2.5 sm:px-4 flex items-center justify-between z-30 shrink-0 transition-all select-none">
       
       {/* Left section: Toggle & Model Selector */}
       <div className="flex items-center gap-1.5 sm:gap-2">
@@ -188,14 +188,14 @@ export default function Header({
           )}
         </div>
 
-        {/* Отзывы Button */}
+        {/* Отзывы Button (desktop header, on mobile it is in bottom nav) */}
         <button
           onClick={onOpenReviews}
-          className="flex items-center gap-1 p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100/90 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-600 dark:hover:text-amber-300 text-slate-700 dark:text-slate-200 transition-all cursor-pointer text-xs font-semibold border border-slate-200/80 dark:border-slate-700/80 shadow-2xs active:scale-95"
+          className="hidden sm:flex items-center gap-1 p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100/90 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-600 dark:hover:text-amber-300 text-slate-700 dark:text-slate-200 transition-all cursor-pointer text-xs font-semibold border border-slate-200/80 dark:border-slate-700/80 shadow-2xs active:scale-95"
           title="Отзывы учеников"
         >
           <span className="text-amber-500">★</span>
-          <span className="hidden sm:inline">Отзывы</span>
+          <span>Отзывы</span>
         </button>
 
         {/* Шпаргалка формул Button */}
@@ -211,11 +211,11 @@ export default function Header({
         {/* Закладки Button */}
         <button
           onClick={onOpenBookmarks}
-          className="flex items-center gap-1 p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100/90 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-600 dark:hover:text-amber-300 text-slate-700 dark:text-slate-200 transition-all cursor-pointer text-xs font-semibold border border-slate-200/80 dark:border-slate-700/80 shadow-2xs active:scale-95"
+          className="hidden sm:flex items-center gap-1 p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100/90 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-600 dark:hover:text-amber-300 text-slate-700 dark:text-slate-200 transition-all cursor-pointer text-xs font-semibold border border-slate-200/80 dark:border-slate-700/80 shadow-2xs active:scale-95"
           title="Мои закладки"
         >
           <Star className={`w-3.5 h-3.5 ${bookmarkCount > 0 ? 'text-amber-500 fill-amber-400' : 'text-slate-400'}`} />
-          <span className="hidden sm:inline">Закладки</span>
+          <span>Закладки</span>
           {bookmarkCount > 0 && (
             <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-200 dark:bg-amber-900/80 text-amber-900 dark:text-amber-100 font-bold">
               {bookmarkCount}

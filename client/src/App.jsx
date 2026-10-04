@@ -8,6 +8,7 @@ import TextbooksModal from './components/TextbooksModal.jsx';
 import CheatSheetModal from './components/CheatSheetModal.jsx';
 import BookmarksModal from './components/BookmarksModal.jsx';
 import ReviewsModal from './components/ReviewsModal.jsx';
+import BottomNavBar from './components/BottomNavBar.jsx';
 import { MODELS } from './constants/models.js';
 import { streamChat } from './services/chatStream.js';
 import AuthModal from './components/AuthModal.jsx';
@@ -15,6 +16,10 @@ import { checkAndHandleYandexToken } from './services/yandexAuth.js';
 import { ArrowRight, Image as ImgIcon, Zap, Sparkles, Plus, Camera, Send } from 'lucide-react';
 import { detectExerciseInQuery } from './constants/exerciseIndex.js';
 import { renderPdfPageToDataUrl } from './services/pdfRenderer.js';
+import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { SplashScreen } from '@capacitor/splash-screen';
 
 const STORAGE_CHATS = 'mistral_chats_v1';
 const STORAGE_MODEL = 'mistral_model_v1';
@@ -53,6 +58,40 @@ export default function App() {
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
   // Reviews Modal State
   const [reviewsOpen, setReviewsOpen] = useState(false);
+  // Mobile Bottom Navigation active tab ('chat', 'textbooks', 'formulas', 'reviews', 'profile')
+  const [mobileTab, setMobileTab] = useState('chat');
+
+  const handleSelectMobileTab = (tab) => {
+    setMobileTab(tab);
+    if (tab === 'chat') {
+      setTextbooksOpen(false);
+      setCheatSheetOpen(false);
+      setBookmarksOpen(false);
+      setReviewsOpen(false);
+      setSettingsOpen(false);
+    } else if (tab === 'textbooks') {
+      setTextbooksOpen(true);
+      setCheatSheetOpen(false);
+      setReviewsOpen(false);
+      setSettingsOpen(false);
+    } else if (tab === 'formulas') {
+      setCheatSheetOpen(true);
+      setTextbooksOpen(false);
+      setReviewsOpen(false);
+      setSettingsOpen(false);
+    } else if (tab === 'reviews') {
+      setReviewsOpen(true);
+      setTextbooksOpen(false);
+      setCheatSheetOpen(false);
+      setSettingsOpen(false);
+    } else if (tab === 'profile') {
+      setSettingsOpen(true);
+      setTextbooksOpen(false);
+      setCheatSheetOpen(false);
+      setReviewsOpen(false);
+    }
+  };
+
   // Arena Centered Hero input state
   const [heroPrompt, setHeroPrompt] = useState('');
 
@@ -132,6 +171,42 @@ export default function App() {
     }
     checkAuth();
   }, []);
+
+  // Native Capacitor Status Bar & Splash Screen
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        SplashScreen.hide().catch(() => {});
+        StatusBar.setStyle({ style: darkMode ? Style.Dark : Style.Light }).catch(() => {});
+        StatusBar.setBackgroundColor({ color: darkMode ? '#0f172a' : '#ffffff' }).catch(() => {});
+      } catch {}
+    }
+  }, [darkMode]);
+
+  // Android Native Hardware Back Button Handler
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    let sub;
+    try {
+      sub = CapApp.addListener('backButton', () => {
+        if (textbooksOpen) { setTextbooksOpen(false); setMobileTab('chat'); return; }
+        if (cheatSheetOpen) { setCheatSheetOpen(false); setMobileTab('chat'); return; }
+        if (bookmarksOpen) { setBookmarksOpen(false); setMobileTab('chat'); return; }
+        if (reviewsOpen) { setReviewsOpen(false); setMobileTab('chat'); return; }
+        if (settingsOpen) { setSettingsOpen(false); setMobileTab('chat'); return; }
+        if (authModalOpen) { setAuthModalOpen(false); return; }
+        if (sidebarOpen && window.innerWidth < 1024) { setSidebarOpen(false); return; }
+
+        // Exit App if on root chat
+        CapApp.exitApp();
+      });
+    } catch {}
+
+    return () => {
+      if (sub && sub.remove) sub.remove();
+    };
+  }, [textbooksOpen, cheatSheetOpen, bookmarksOpen, reviewsOpen, settingsOpen, authModalOpen, sidebarOpen]);
 
   const abortRef = useRef(null);
   const bottomRef = useRef(null);
@@ -419,7 +494,7 @@ export default function App() {
         {/* Chat / Messages Area */}
         <div
           ref={scrollRef}
-          className="flex-1 overflow-y-auto overscroll-contain min-h-0 touch-pan-y"
+          className="flex-1 overflow-y-auto overscroll-contain min-h-0 touch-pan-y pb-24 md:pb-4"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
 
@@ -664,59 +739,28 @@ export default function App() {
 
         {/* Input Bar (When in active chat or pinned at bottom) */}
         {activeChat.messages.length > 0 && (
-          <ChatInput
-            onSend={handleSend}
-            onStop={handleStop}
-            streaming={streaming}
-            activeSubject={activeChat?.subject}
-            onOpenTextbooks={() => setTextbooksOpen(true)}
-          />
+          <div className="pb-14 md:pb-0 shrink-0">
+            <ChatInput
+              onSend={handleSend}
+              onStop={handleStop}
+              streaming={streaming}
+              activeSubject={activeChat?.subject}
+              onOpenTextbooks={() => {
+                setTextbooksOpen(true);
+                setMobileTab('textbooks');
+              }}
+            />
+          </div>
         )}
-
-        {/* Mobile Bottom Navigation Dock (Native App Feel on Smartphones) */}
-        <div className="sm:hidden flex items-center justify-around py-2 px-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 z-20 shrink-0 select-none">
-          <button
-            type="button"
-            onClick={() => setSidebarOpen(true)}
-            className="flex flex-col items-center gap-0.5 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-[10px] font-semibold transition-colors"
-          >
-            <span className="text-base">💬</span>
-            <span>Диалоги</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setTextbooksOpen(true)}
-            className="flex flex-col items-center gap-0.5 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 text-[10px] font-semibold transition-colors"
-          >
-            <span className="text-base">📚</span>
-            <span>Учебники</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setCheatSheetOpen(true)}
-            className="flex flex-col items-center gap-0.5 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-[10px] font-semibold transition-colors"
-          >
-            <span className="text-base">📐</span>
-            <span>Формулы</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setReviewsOpen(true)}
-            className="flex flex-col items-center gap-0.5 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 text-[10px] font-semibold transition-colors"
-          >
-            <span className="text-base">⭐</span>
-            <span>Отзывы</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setBookmarksOpen(true)}
-            className="flex flex-col items-center gap-0.5 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 text-[10px] font-semibold transition-colors"
-          >
-            <span className="text-base">📌</span>
-            <span>Закладки</span>
-          </button>
-        </div>
       </div>
+
+      {/* Native Bottom Navigation Bar on Mobile / Android APK */}
+      <BottomNavBar
+        activeTab={mobileTab}
+        onSelectTab={handleSelectMobileTab}
+        user={user}
+        streaming={streaming}
+      />
 
       {/* Yandex ID Authentication Modal */}
       <AuthModal
@@ -724,25 +768,36 @@ export default function App() {
         onLogin={handleLogin}
       />
 
-      {/* Settings Modal */}
+      {/* Settings & Profile Sheet */}
       <SettingsModal
         isOpen={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
+        onClose={() => {
+          setSettingsOpen(false);
+          setMobileTab('chat');
+        }}
         darkMode={darkMode}
         setDarkMode={setDarkMode}
         onClearAll={handleClearAllChats}
+        user={user}
+        onLogout={handleLogout}
+        onOpenLogin={() => setAuthModalOpen(true)}
       />
 
       {/* Textbooks Library Modal */}
       <TextbooksModal
         isOpen={textbooksOpen}
-        onClose={() => setTextbooksOpen(false)}
+        onClose={() => {
+          setTextbooksOpen(false);
+          setMobileTab('chat');
+        }}
         onAskBookTopic={(prompt) => {
           handleSend(prompt);
+          setMobileTab('chat');
           if (window.innerWidth < 1024) setSidebarOpen(false);
         }}
         onSendBookPage={(prompt, imgs) => {
           handleSend(prompt, imgs);
+          setMobileTab('chat');
           if (window.innerWidth < 1024) setSidebarOpen(false);
         }}
       />
@@ -750,9 +805,13 @@ export default function App() {
       {/* CheatSheet Formulas Modal */}
       <CheatSheetModal
         isOpen={cheatSheetOpen}
-        onClose={() => setCheatSheetOpen(false)}
+        onClose={() => {
+          setCheatSheetOpen(false);
+          setMobileTab('chat');
+        }}
         onInsertToChat={(prompt) => {
           handleSend(prompt);
+          setMobileTab('chat');
           if (window.innerWidth < 1024) setSidebarOpen(false);
         }}
       />
@@ -760,9 +819,13 @@ export default function App() {
       {/* Bookmarks Modal */}
       <BookmarksModal
         isOpen={bookmarksOpen}
-        onClose={() => setBookmarksOpen(false)}
+        onClose={() => {
+          setBookmarksOpen(false);
+          setMobileTab('chat');
+        }}
         onOpenInChat={(content) => {
           handleSend(`Поясни этот сохраненный конспект или решение:\n${content}`);
+          setMobileTab('chat');
           if (window.innerWidth < 1024) setSidebarOpen(false);
         }}
       />
@@ -770,7 +833,10 @@ export default function App() {
       {/* Reviews Modal */}
       <ReviewsModal
         isOpen={reviewsOpen}
-        onClose={() => setReviewsOpen(false)}
+        onClose={() => {
+          setReviewsOpen(false);
+          setMobileTab('chat');
+        }}
         user={user}
       />
     </div>
