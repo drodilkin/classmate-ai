@@ -286,11 +286,7 @@ export default function ChatInput({ onSend, onStop, streaming, onOpenTextbooks, 
         )}
 
         {/* Input Card */}
-        <div className={`relative flex items-end gap-1.5 sm:gap-2 bg-slate-50/90 dark:bg-slate-800/80 border ${
-          isListening 
-            ? 'border-red-500 ring-2 ring-red-500/20 bg-red-50/20 dark:bg-red-950/20' 
-            : 'border-slate-200 dark:border-slate-700/80 focus-within:border-indigo-500/60 focus-within:ring-2 focus-within:ring-indigo-500/10'
-        } rounded-2xl p-1.5 sm:p-2 transition-all shadow-2xs`}>
+        <div className="relative flex items-end gap-1.5 sm:gap-2 bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 focus-within:border-indigo-500/60 focus-within:ring-2 focus-within:ring-indigo-500/10 rounded-2xl p-1.5 sm:p-2 transition-all shadow-2xs">
           
           {/* Hidden Inputs for Camera and Gallery */}
           <input
